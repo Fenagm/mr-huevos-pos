@@ -234,7 +234,8 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
         `/.netlify/functions/get-sessions?branchId=${branchId}&startDate=${startDate}&endDate=${endDate}`
       )
       if (response.ok) {
-        sessions.value = await response.json()
+        const data = await response.json()
+        sessions.value = data.sessions || []
       } else {
         throw new Error('Failed to load sessions')
       }
@@ -250,7 +251,8 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
     try {
       const response = await fetch(`/.netlify/functions/get-expenses?sessionId=${sessionId}`)
       if (response.ok) {
-        expenses.value = await response.json()
+        const data = await response.json()
+        expenses.value = data.expenses || []
       } else {
         throw new Error('Failed to load expenses')
       }

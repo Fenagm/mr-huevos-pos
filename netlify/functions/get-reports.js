@@ -10,6 +10,7 @@ export const handler = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify({
+      success: true,
       sales: mockSales,
       summary: {
         totalSales: mockSales.reduce((sum, sale) => sum + sale.total, 0).toFixed(2),

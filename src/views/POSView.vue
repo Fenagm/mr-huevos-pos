@@ -30,8 +30,16 @@
               </div>
             </div>
             
+            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <button v-for="product in branchProducts" :key="product.id" @click="addToCart(product)" class="p-3 sm:p-4 border rounded-lg bg-white hover:bg-blue-50 hover:border-blue-500 transition-colors text-left">
+                <div class="font-medium text-xs sm:text-sm truncate">{{ product.name }}</div>
+                <div class="text-xs text-gray-600">${{ product.price.toFixed(2) }}</div>
+                <div class="text-xs text-gray-500">Stock: {{ product.stock }}</div>
+              </button>
+            </div>
+
             <!-- Selector manual de producto con cantidad y precio libre -->
-            <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+            <div class="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
               <h3 class="text-base sm:text-lg font-medium mb-3">Agregar producto personalizado</h3>
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
                 <div>
@@ -53,14 +61,6 @@
                 </div>
                 <button @click="addManualProduct" class="btn-primary w-full text-sm">Agregar</button>
               </div>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              <button v-for="product in branchProducts" :key="product.id" @click="addToCart(product)" class="p-3 sm:p-4 border rounded-lg bg-white hover:bg-blue-50 hover:border-blue-500 transition-colors text-left">
-                <div class="font-medium text-xs sm:text-sm truncate">{{ product.name }}</div>
-                <div class="text-xs text-gray-600">${{ product.price.toFixed(2) }}</div>
-                <div class="text-xs text-gray-500">Stock: {{ product.stock }}</div>
-              </button>
             </div>
           </div>
 
