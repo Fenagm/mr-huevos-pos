@@ -49,6 +49,33 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div class="border rounded-lg p-4 bg-white">
+            <h3 class="font-semibold mb-3">Gráfico por tipo de pago</h3>
+            <div v-for="payment in paymentBreakdown" :key="payment.method" class="mb-3">
+              <div class="flex justify-between text-sm mb-1">
+                <span>{{ payment.label }}</span>
+                <span>${{ payment.total.toFixed(2) }}</span>
+              </div>
+              <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-blue-600" :style="{ width: payment.percentage + '%' }"></div>
+              </div>
+            </div>
+          </div>
+          <div class="border rounded-lg p-4 bg-white">
+            <h3 class="font-semibold mb-3">Gráfico por día</h3>
+            <div v-for="day in dailyBreakdown" :key="day.date" class="mb-3">
+              <div class="flex justify-between text-sm mb-1">
+                <span>{{ formatDate(day.date) }}</span>
+                <span>${{ day.total.toFixed(2) }}</span>
+              </div>
+              <div class="h-4 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-green-600" :style="{ width: day.percentage + '%' }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sales Table -->
         <div class="overflow-x-auto">
           <table class="w-full">
@@ -57,6 +84,7 @@
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Fecha</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Productos</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Total</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Tipo de pago</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Usuario</th>
               </tr>
             </thead>
@@ -65,6 +93,7 @@
                 <td class="px-4 py-3 text-sm">{{ formatDate(sale.date) }}</td>
                 <td class="px-4 py-3 text-sm">{{ sale.itemsCount }} items</td>
                 <td class="px-4 py-3 text-sm font-medium">${{ sale.total.toFixed(2) }}</td>
+                <td class="px-4 py-3 text-sm">{{ paymentLabel(sale.paymentMethod) }}</td>
                 <td class="px-4 py-3 text-sm">{{ sale.user }}</td>
               </tr>
             </tbody>
@@ -80,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
@@ -99,6 +128,32 @@ const summary = ref({
   topProduct: '-',
 })
 
+const paymentLabels = { cash: 'Efectivo', transfer: 'Transferencia', card: 'Tarjeta', account: 'Cuenta Corriente' }
+
+const paymentBreakdown = computed(() => {
+  const totals = sales.value.reduce((acc, sale) => {
+    const method = sale.paymentMethod || 'cash'
+    acc[method] = (acc[method] || 0) + sale.total
+    return acc
+  }, {})
+  const max = Math.max(...Object.values(totals), 1)
+  return Object.entries(totals).map(([method, total]) => ({
+    method,
+    label: paymentLabel(method),
+    total,
+    percentage: Math.round((total / max) * 100),
+  }))
+})
+
+const dailyBreakdown = computed(() => {
+  const totals = sales.value.reduce((acc, sale) => {
+    acc[sale.date] = (acc[sale.date] || 0) + sale.total
+    return acc
+  }, {})
+  const max = Math.max(...Object.values(totals), 1)
+  return Object.entries(totals).map(([date, total]) => ({ date, total, percentage: Math.round((total / max) * 100) }))
+})
+
 async function loadReports() {
   try {
     const response = await fetch('/.netlify/functions/get-reports', {
@@ -115,9 +170,9 @@ async function loadReports() {
   } catch (error) {
     // Demo mode
     sales.value = [
-      { id: 1, date: '2024-01-15', itemsCount: 5, total: 45.50, user: 'admin' },
-      { id: 2, date: '2024-01-15', itemsCount: 3, total: 28.00, user: 'admin' },
-      { id: 3, date: '2024-01-14', itemsCount: 10, total: 95.00, user: 'admin' },
+      { id: 1, date: '2024-01-15', itemsCount: 5, total: 45.50, paymentMethod: 'cash', user: 'admin' },
+      { id: 2, date: '2024-01-15', itemsCount: 3, total: 28.00, paymentMethod: 'transfer', user: 'admin' },
+      { id: 3, date: '2024-01-14', itemsCount: 10, total: 95.00, paymentMethod: 'card', user: 'admin' },
     ]
     summary.value = {
       totalSales: '168.50',
@@ -125,6 +180,10 @@ async function loadReports() {
       topProduct: 'Huevo Blanco (30u)',
     }
   }
+}
+
+function paymentLabel(method) {
+  return paymentLabels[method] || 'Efectivo'
 }
 
 function formatDate(dateStr) {

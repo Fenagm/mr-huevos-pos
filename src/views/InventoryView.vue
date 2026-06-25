@@ -12,6 +12,7 @@
           <router-link to="/reports" class="text-gray-600 hover:text-gray-800">Reportes</router-link>
           <router-link to="/customers" class="text-gray-600 hover:text-gray-800">Clientes</router-link>
           <router-link to="/inventory" class="text-blue-600 font-medium">Inventario</router-link>
+          <router-link to="/purchases" class="text-gray-600 hover:text-gray-800">Compras</router-link>
           <router-link to="/logistics" class="text-gray-600 hover:text-gray-800">Logística</router-link>
           <button @click="handleLogout" class="btn-danger ml-4">Salir</button>
         </nav>
@@ -70,7 +71,6 @@
                 <thead class="bg-gray-50">
                   <tr>
                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Nombre</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Costo</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Minorista</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Mayorista</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Stock</th>
@@ -86,7 +86,6 @@
                     :class="{'bg-red-50': product.stock < 20}"
                   >
                     <td class="px-4 py-3 text-sm font-medium">{{ product.name }}</td>
-                    <td class="px-4 py-3 text-sm">${{ product.costPrice?.toFixed(2) }}</td>
                     <td class="px-4 py-3 text-sm">${{ product.retailPrice?.toFixed(2) }}</td>
                     <td class="px-4 py-3 text-sm">${{ product.wholesalePrice?.toFixed(2) }}</td>
                     <td class="px-4 py-3 text-sm">
