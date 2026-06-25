@@ -74,7 +74,7 @@
               <button @click="openCash" class="btn-primary w-full text-sm">Abrir caja</button>
             </div>
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
-              <div class="text-xs sm:text-sm"><strong>Caja abierta</strong><br>Inicial: ${{ cashStore.currentSession.initialCash.toFixed(2) }}</div>
+              <div class="text-xs sm:text-sm"><strong>Caja abierta</strong><br>Inicial: ${{ (cashStore.currentSession?.initialCash || 0).toFixed(2) }}</div>
               <div>
                 <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Gasto caja</label>
                 <input v-model="expense.description" placeholder="Concepto" class="input-field mb-1 text-sm" />
