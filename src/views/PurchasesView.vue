@@ -81,32 +81,43 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useInventoryStore } from '@/stores/inventory'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const inventoryStore = useInventoryStore()
 
-const purchases = ref([
-  { id: 1, product: 'Huevo Blanco (30u)', supplier: 'Granja San Miguel', quantity: 100, totalPrice: 350, unitPrice: 3.5, branchId: 1, date: new Date().toISOString() },
-  { id: 2, product: 'Huevo Rojo (30u)', supplier: 'Avícola Campo Verde', quantity: 80, totalPrice: 296, unitPrice: 3.7, branchId: 1, date: new Date().toISOString() },
-])
+const purchases = ref([])
 const form = ref({ product: '', supplier: '', quantity: 1, totalPrice: 0 })
 const unitPrice = computed(() => form.value.quantity > 0 ? Number(form.value.totalPrice || 0) / form.value.quantity : 0)
 const branchPurchases = computed(() => purchases.value.filter((p) => p.branchId === authStore.currentBranch?.id))
 const totalPurchases = computed(() => branchPurchases.value.reduce((sum, p) => sum + p.totalPrice, 0))
 
 function savePurchase() {
-  purchases.value.unshift({
+  const newPurchase = {
     id: Date.now(),
     ...form.value,
     unitPrice: unitPrice.value,
     branchId: authStore.currentBranch?.id,
     date: new Date().toISOString(),
-  })
+  }
+  purchases.value.unshift(newPurchase)
+  
+  // Actualizar el costo del producto si existe en el inventario
+  const existingProduct = inventoryStore.products.find(p => p.name === form.value.product && p.branchId === authStore.currentBranch?.id)
+  if (existingProduct) {
+    existingProduct.costPrice = unitPrice.value
+  }
+  
   form.value = { product: '', supplier: '', quantity: 1, totalPrice: 0 }
 }
 function formatDate(value) { return new Date(value).toLocaleDateString('es-AR') }
 function handleLogout() { authStore.logout(); router.push('/') }
+
+onMounted(() => {
+  inventoryStore.loadProducts(authStore.currentBranch?.id)
+})
 </script>
