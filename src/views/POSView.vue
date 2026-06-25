@@ -8,6 +8,7 @@
           <router-link to="/pos" class="text-blue-600 font-medium">POS</router-link>
           <router-link to="/reports" class="text-gray-600 hover:text-gray-800">Reportes</router-link>
           <router-link to="/customers" class="text-gray-600 hover:text-gray-800">Clientes</router-link>
+          <router-link v-if="authStore.user?.role === 'admin'" to="/logistics" class="text-gray-600 hover:text-gray-800">Logística</router-link>
           <button @click="handleLogout" class="btn-danger ml-4">Salir</button>
         </nav>
       </div>
@@ -71,18 +72,103 @@
                 <span>${{ total.toFixed(2) }}</span>
               </div>
 
+              <!-- For Delivery Checkbox (Admin only) -->
+              <div v-if="authStore.user?.role === 'admin'" class="mb-4">
+                <label class="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    v-model="isForDelivery" 
+                    type="checkbox" 
+                    class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span class="text-gray-700 font-medium">📦 Para Envío</span>
+                </label>
+              </div>
+
+              <!-- Delivery Options (shown when For Delivery is checked) -->
+              <div v-if="isForDelivery" class="mb-4 p-3 bg-blue-50 rounded-lg space-y-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Entrega</label>
+                  <input 
+                    v-model="deliveryDate" 
+                    type="date" 
+                    class="input-field"
+                    :min="today"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                  <select v-model="selectedCustomerId" class="input-field">
+                    <option value="">-- Seleccionar Cliente --</option>
+                    <option v-for="customer in customers" :key="customer.id" :value="customer.id">
+                      {{ customer.name }}
+                    </option>
+                  </select>
+                </div>
+                <div v-if="selectedCustomer">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                  <input 
+                    v-model="deliveryAddress" 
+                    type="text" 
+                    class="input-field"
+                    placeholder="Dirección de entrega"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Total Bultos</label>
+                  <input 
+                    v-model.number="totalBultos" 
+                    type="number" 
+                    class="input-field"
+                    placeholder="Cantidad de maples/bultos"
+                  />
+                </div>
+              </div>
+
               <button 
                 @click="processSale"
-                :disabled="cart.length === 0 || processing"
+                :disabled="cart.length === 0 || processing || (isForDelivery && !validateDeliveryForm())"
                 class="btn-primary w-full"
               >
-                {{ processing ? 'Procesando...' : 'Cobrar' }}
+                {{ processing ? 'Procesando...' : (isForDelivery ? 'Registrar para Envío' : 'Cobrar') }}
               </button>
+              
+              <p v-if="isForDelivery && !validateDeliveryForm()" class="text-xs text-red-600 mt-2">
+                ⚠️ Complete todos los campos de entrega
+              </p>
             </div>
           </div>
         </div>
       </div>
     </main>
+
+    <!-- Customer Modal -->
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div class="card w-full max-w-md">
+        <h3 class="text-lg font-semibold mb-4">Nuevo Cliente</h3>
+        
+        <form @submit.prevent="saveCustomer" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+            <input v-model="newCustomer.name" type="text" class="input-field" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <input v-model="newCustomer.email" type="email" class="input-field" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
+            <input v-model="newCustomer.phone" type="tel" class="input-field" />
+          </div>
+          
+          <div class="flex space-x-3 pt-4">
+            <button type="button" @click="showModal = false" class="flex-1 border border-gray-300 rounded-lg py-2 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button type="submit" class="flex-1 btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -90,9 +176,11 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLogisticsStore } from '@/stores/logistics'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const logisticsStore = useLogisticsStore()
 
 // Demo products
 const products = ref([
@@ -107,8 +195,30 @@ const products = ref([
 const cart = ref([])
 const processing = ref(false)
 
+// Delivery-related state
+const isForDelivery = ref(false)
+const deliveryDate = ref('')
+const selectedCustomerId = ref('')
+const deliveryAddress = ref('')
+const totalBultos = ref(0)
+const showModal = ref(false)
+const newCustomer = ref({ name: '', email: '', phone: '' })
+
+// Demo customers
+const customers = ref([
+  { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '555-1234', address: 'Calle Falsa 123' },
+  { id: 2, name: 'María García', email: 'maria@email.com', phone: '555-5678', address: 'Av. Siempre Viva 742' },
+  { id: 3, name: 'Carlos López', email: 'carlos@email.com', phone: '555-9012', address: 'Belgrano 456' },
+])
+
+const today = new Date().toISOString().split('T')[0]
+
 const total = computed(() => {
   return cart.value.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+})
+
+const selectedCustomer = computed(() => {
+  return customers.value.find(c => c.id === selectedCustomerId.value)
 })
 
 function addToCart(product) {
@@ -125,22 +235,62 @@ function removeFromCart(index) {
   cart.value.splice(index, 1)
 }
 
+function validateDeliveryForm() {
+  return deliveryDate.value && selectedCustomerId.value && deliveryAddress.value && totalBultos.value > 0
+}
+
 async function processSale() {
   processing.value = true
 
   try {
+    const saleData = {
+      items: cart.value,
+      total: total.value,
+      userId: authStore.user?.id,
+    }
+
+    // If it's for delivery, include delivery information
+    if (isForDelivery.value) {
+      const customer = customers.value.find(c => c.id === selectedCustomerId.value)
+      saleData.isForDelivery = true
+      saleData.deliveryDate = deliveryDate.value
+      saleData.customerId = selectedCustomerId.value
+      saleData.customerName = customer?.name
+      saleData.customerAddress = deliveryAddress.value
+      saleData.customerPhone = customer?.phone
+      saleData.totalBultos = totalBultos.value
+    }
+
     const response = await fetch('/.netlify/functions/create-sale', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        items: cart.value,
-        total: total.value,
-        userId: authStore.user?.id,
-      }),
+      body: JSON.stringify(saleData),
     })
 
     if (response.ok) {
       alert('Venta registrada con éxito')
+      
+      // If it's for delivery, create a delivery record
+      if (isForDelivery.value) {
+        const customer = customers.value.find(c => c.id === selectedCustomerId.value)
+        await logisticsStore.createDelivery({
+          saleId: Date.now(), // In real app, this would come from the sale response
+          customerName: customer?.name,
+          customerAddress: deliveryAddress.value,
+          customerPhone: customer?.phone,
+          deliveryDate: deliveryDate.value,
+          totalBultos: totalBultos.value,
+        })
+        alert('Entrega programada exitosamente')
+        
+        // Reset delivery form
+        isForDelivery.value = false
+        deliveryDate.value = ''
+        selectedCustomerId.value = ''
+        deliveryAddress.value = ''
+        totalBultos.value = 0
+      }
+      
       cart.value = []
     } else {
       throw new Error('Error al registrar venta')
@@ -148,10 +298,45 @@ async function processSale() {
   } catch (error) {
     // Demo mode
     alert('Venta registrada (modo demo)')
+    
+    // If it's for delivery in demo mode
+    if (isForDelivery.value) {
+      const customer = customers.value.find(c => c.id === selectedCustomerId.value)
+      await logisticsStore.createDelivery({
+        saleId: Date.now(),
+        customerName: customer?.name,
+        customerAddress: deliveryAddress.value,
+        customerPhone: customer?.phone,
+        deliveryDate: deliveryDate.value,
+        totalBultos: totalBultos.value,
+      })
+      alert('Entrega programada exitosamente (modo demo)')
+      
+      // Reset delivery form
+      isForDelivery.value = false
+      deliveryDate.value = ''
+      selectedCustomerId.value = ''
+      deliveryAddress.value = ''
+      totalBultos.value = 0
+    }
+    
     cart.value = []
   } finally {
     processing.value = false
   }
+}
+
+function saveCustomer() {
+  customers.value.push({
+    id: Date.now(),
+    ...newCustomer.value,
+    address: '',
+    totalPurchases: 0,
+  })
+  
+  newCustomer.value = { name: '', email: '', phone: '' }
+  showModal.value = false
+  alert('Cliente guardado (modo demo)')
 }
 
 function handleLogout() {
