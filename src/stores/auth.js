@@ -13,9 +13,9 @@ export const useAuthStore = defineStore('auth', () => {
   
   // Demo users with branches
   const demoUsers = [
-    { id: 1, username: 'admin', role: 'admin', branchId: 1, branchName: 'Centenario' },
-    { id: 2, username: 'encargado', role: 'manager', branchId: 1, branchName: 'Centenario' },
-    { id: 3, username: 'vendedor', role: 'seller', branchId: 2, branchName: 'Caaguazú' },
+    { id: 1, username: 'admin', password: 'admin123', role: 'admin', branchId: 1, branchName: 'Centenario' },
+    { id: 2, username: 'encargado', password: 'encargado123', role: 'manager', branchId: 1, branchName: 'Centenario' },
+    { id: 3, username: 'vendedor', password: 'vendedor123', role: 'seller', branchId: 2, branchName: 'Caaguazú' },
   ]
 
   async function login(username, password) {
@@ -42,17 +42,18 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } catch (error) {
       // Demo mode - accept any password for known users
-      const demoUser = demoUsers.find(u => u.username === username)
+      const demoUser = demoUsers.find(u => u.username === username && u.password === password)
       if (demoUser) {
-        user.value = demoUser
+        const { password: _password, ...safeDemoUser } = demoUser
+        user.value = safeDemoUser
         token.value = 'demo-token'
         localStorage.setItem('token', 'demo-token')
-        currentBranch.value = { id: demoUser.branchId, name: demoUser.branchName }
+        currentBranch.value = { id: safeDemoUser.branchId, name: safeDemoUser.branchName }
         localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
         return { success: true }
       }
       // Default admin fallback
-      if (username === 'admin') {
+      if (username === 'admin' && password === 'admin123') {
         user.value = { id: 1, username: 'admin', role: 'admin', branchId: 1, branchName: 'Centenario' }
         token.value = 'demo-token'
         localStorage.setItem('token', 'demo-token')
@@ -89,6 +90,14 @@ export const useAuthStore = defineStore('auth', () => {
     return user.value?.role === 'admin'
   }
 
+  function canAccessLogistics() {
+    return user.value?.role === 'admin'
+  }
+
+  function canAccessInventory() {
+    return user.value?.role === 'admin' || user.value?.role === 'manager'
+  }
+
   return {
     user,
     token,
@@ -103,5 +112,7 @@ export const useAuthStore = defineStore('auth', () => {
     canModifyPrices,
     canViewReports,
     canManageInventory,
+    canAccessLogistics,
+    canAccessInventory,
   }
 })

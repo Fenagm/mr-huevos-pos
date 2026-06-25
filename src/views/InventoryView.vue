@@ -25,10 +25,10 @@
         <div class="lg:col-span-1">
           <div class="card mb-6">
             <h3 class="text-lg font-semibold mb-4">Acciones</h3>
-            <button @click="showProductModal = true; editingProduct = null" class="w-full btn-primary mb-2">
+            <button v-if="authStore.isAdmin" @click="showProductModal = true; editingProduct = null" class="w-full btn-primary mb-2">
               + Nuevo Producto
             </button>
-            <button @click="showSpoilageModal = true" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <button v-if="authStore.isAdmin || authStore.isSeller" @click="showSpoilageModal = true" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
               🗑️ Registrar Merma
             </button>
           </div>
@@ -102,7 +102,7 @@
                     </td>
                     <td class="px-4 py-3 text-sm">
                       <button @click="editProduct(product)" class="text-blue-600 hover:text-blue-800 mr-3">Editar</button>
-                      <button @click="toggleProductActive(product)" class="text-gray-600 hover:text-gray-800">
+                      <button v-if="authStore.isAdmin" @click="toggleProductActive(product)" class="text-gray-600 hover:text-gray-800">
                         {{ product.active ? 'Desactivar' : 'Activar' }}
                       </button>
                     </td>
@@ -156,11 +156,11 @@
         <form @submit.prevent="saveProduct" class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
-            <input v-model="productForm.name" type="text" class="input-field" required />
+            <input v-model="productForm.name" type="text" class="input-field" :disabled="authStore.isManager && !authStore.isAdmin" required />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Costo de Compra</label>
-            <input v-model.number="productForm.costPrice" type="number" step="0.01" min="0" class="input-field" required />
+            <input v-model.number="productForm.costPrice" type="number" step="0.01" min="0" class="input-field" :disabled="authStore.isManager && !authStore.isAdmin" required />
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Precio Minorista</label>
@@ -172,7 +172,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Stock Inicial</label>
-            <input v-model.number="productForm.stock" type="number" min="0" class="input-field" required />
+            <input v-model.number="productForm.stock" type="number" min="0" class="input-field" :disabled="authStore.isManager && !authStore.isAdmin" required />
           </div>
           <div class="flex space-x-3 pt-4">
             <button type="button" @click="showProductModal = false" class="flex-1 border border-gray-300 rounded-lg py-2 hover:bg-gray-50">
@@ -287,7 +287,8 @@ function editProduct(product) {
 async function saveProduct() {
   const result = await inventoryStore.saveProduct({
     ...productForm.value,
-    id: editingProduct.value?.id
+    id: editingProduct.value?.id,
+    branchId: authStore.currentBranch?.id || productForm.value.branchId
   })
   
   if (result.success) {
@@ -314,7 +315,8 @@ async function registerSpoilage() {
     quantity: spoilageForm.value.quantity,
     reason: spoilageForm.value.reason,
     notes: spoilageForm.value.notes,
-    userId: authStore.user.id
+    userId: authStore.user.id,
+    branchId: authStore.currentBranch?.id
   })
   
   if (result.success) {
@@ -332,6 +334,6 @@ function handleLogout() {
 }
 
 onMounted(async () => {
-  await inventoryStore.loadProducts()
+  await inventoryStore.loadProducts(authStore.currentBranch?.id)
 })
 </script>

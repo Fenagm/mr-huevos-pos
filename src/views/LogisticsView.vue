@@ -16,6 +16,19 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6">
+      <div class="card mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">Flota de reparto</h2>
+          <button @click="showVehicleForm = !showVehicleForm" class="btn-primary">+ Vehículo</button>
+        </div>
+        <form v-if="showVehicleForm" @submit.prevent="saveVehicle" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input v-model="vehicleForm.name" class="input-field" placeholder="Nombre del vehículo" required />
+          <input v-model="vehicleForm.license_plate" class="input-field" placeholder="Patente" />
+          <input v-model.number="vehicleForm.capacity" type="number" min="1" class="input-field" placeholder="Capacidad máx. bultos/maples" required />
+          <button class="btn-primary">Guardar vehículo</button>
+        </form>
+      </div>
+
       <!-- Date Selector -->
       <div class="card mb-6">
         <div class="flex items-center justify-between">
@@ -212,6 +225,8 @@ const selectedDate = ref(new Date().toISOString().split('T')[0])
 const showCapacityWarning = ref(false)
 const capacityWarningMessage = ref('')
 const pendingDeliveryToAssign = ref(null)
+const showVehicleForm = ref(false)
+const vehicleForm = ref({ name: '', license_plate: '', capacity: 0 })
 
 // Computed
 const vehicles = computed(() => logisticsStore.vehicles)
@@ -249,6 +264,14 @@ function formatDate(dateString) {
 
 async function loadDeliveriesForDate() {
   await logisticsStore.loadDeliveries(selectedDate.value)
+}
+
+async function saveVehicle() {
+  const result = await logisticsStore.saveVehicle(vehicleForm.value)
+  if (result.success) {
+    vehicleForm.value = { name: '', license_plate: '', capacity: 0 }
+    showVehicleForm.value = false
+  }
 }
 
 async function confirmAssignment(delivery) {

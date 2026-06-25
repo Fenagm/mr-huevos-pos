@@ -29,7 +29,7 @@ const routes = [
     path: '/inventory',
     name: 'Inventory',
     component: () => import('@/views/InventoryView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    meta: { requiresAuth: true, roles: ['admin', 'manager'] },
   },
   {
     path: '/accounts-receivable',
@@ -57,6 +57,9 @@ router.beforeEach((to, from, next) => {
     next('/')
   } else if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
     alert('Acceso denegado. Solo administradores pueden acceder a esta sección.')
+    next('/pos')
+  } else if (to.meta.roles && !to.meta.roles.includes(authStore.user?.role)) {
+    alert('Acceso denegado para su perfil.')
     next('/pos')
   } else if (to.path === '/' && authStore.isAuthenticated) {
     next('/pos')

@@ -85,6 +85,14 @@ export const useLogisticsStore = defineStore('logistics', () => {
   }
 
   // Actions
+  async function saveVehicle(vehicle) {
+    const payload = { ...vehicle, id: vehicle.id || Date.now(), active: vehicle.active ?? true }
+    const index = vehicles.value.findIndex(v => v.id === payload.id)
+    if (index === -1) vehicles.value.push(payload)
+    else vehicles.value[index] = payload
+    return { success: true, vehicle: payload }
+  }
+
   async function loadVehicles() {
     try {
       const response = await fetch('/.netlify/functions/get-vehicles')
@@ -285,6 +293,7 @@ export const useLogisticsStore = defineStore('logistics', () => {
     getVehicleLoad,
     getVehicleRemainingCapacity,
     wouldExceedCapacity,
+    saveVehicle,
     loadVehicles,
     loadDeliveries,
     assignDeliveryToVehicle,
