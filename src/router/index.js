@@ -32,6 +32,12 @@ const routes = [
     meta: { requiresAuth: true, roles: ['admin', 'manager'] },
   },
   {
+    path: '/purchases',
+    name: 'Purchases',
+    component: () => import('@/views/PurchasesView.vue'),
+    meta: { requiresAuth: true, roles: ['admin', 'manager'] },
+  },
+  {
     path: '/accounts-receivable',
     name: 'AccountsReceivable',
     component: () => import('@/views/AccountsReceivableView.vue'),

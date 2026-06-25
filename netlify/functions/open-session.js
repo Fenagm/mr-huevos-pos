@@ -1,13 +1,17 @@
 export const handler = async (event) => {
-  const { userId, branchId, initialAmount } = JSON.parse(event.body || '{}')
+  const { userId, branchId, initialCash } = JSON.parse(event.body || '{}')
   
   const session = {
-    sessionId: Date.now(),
+    id: Date.now(),
     userId,
     branchId,
-    initialAmount,
+    initialCash,
     openedAt: new Date().toISOString(),
     status: 'open',
+    cashSales: 0,
+    cardSales: 0,
+    transferSales: 0,
+    accountReceivableSales: 0,
   }
   
   console.log('Session opened:', session)

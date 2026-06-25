@@ -251,9 +251,9 @@ const logisticsStore = useLogisticsStore()
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const showCapacityWarning = ref(false)
 const capacityWarningMessage = ref('')
-const pendingDeliveryToAssign = ref(null)
 const showVehicleForm = ref(false)
 const vehicleForm = ref({ name: '', license_plate: '', capacity: 0 })
+const routeSheet = ref(null)
 
 // Computed
 const vehicles = computed(() => logisticsStore.vehicles)
@@ -322,10 +322,8 @@ async function confirmAssignment(delivery) {
   
   if (result.success) {
     delivery.temp_vehicle_id = ''
-    // Auto-assign route order if not set
-    const vehicleDeliveries = getVehicleDeliveries(vehicleId)
-    const nextOrder = vehicleDeliveries.length + 1
-    await logisticsStore.updateRouteOrder(delivery.id, nextOrder)
+    // Route order is already assigned by assignDeliveryToVehicle in demo mode
+    // No need to call updateRouteOrder again to avoid double assignment
     await loadDeliveriesForDate()
   } else {
     capacityWarningMessage.value = result.error
@@ -365,9 +363,12 @@ async function moveDeliveryUp(delivery, vehicleId) {
   if (currentIndex > 0) {
     const previousDelivery = deliveries[currentIndex - 1]
     
-    // Swap route orders
-    await logisticsStore.updateRouteOrder(delivery.id, previousDelivery.route_order || currentIndex)
-    await logisticsStore.updateRouteOrder(previousDelivery.id, delivery.route_order || currentIndex + 1)
+    // Swap route orders using 1-based indexing
+    const currentOrder = delivery.route_order || (currentIndex + 1)
+    const previousOrder = previousDelivery.route_order || currentIndex
+    
+    await logisticsStore.updateRouteOrder(delivery.id, previousOrder)
+    await logisticsStore.updateRouteOrder(previousDelivery.id, currentOrder)
     
     await loadDeliveriesForDate()
   }
@@ -380,9 +381,12 @@ async function moveDeliveryDown(delivery, vehicleId) {
   if (currentIndex < deliveries.length - 1) {
     const nextDelivery = deliveries[currentIndex + 1]
     
-    // Swap route orders
-    await logisticsStore.updateRouteOrder(delivery.id, nextDelivery.route_order || currentIndex + 2)
-    await logisticsStore.updateRouteOrder(nextDelivery.id, delivery.route_order || currentIndex + 1)
+    // Swap route orders using 1-based indexing
+    const currentOrder = delivery.route_order || (currentIndex + 1)
+    const nextOrder = nextDelivery.route_order || (currentIndex + 2)
+    
+    await logisticsStore.updateRouteOrder(delivery.id, nextOrder)
+    await logisticsStore.updateRouteOrder(nextDelivery.id, currentOrder)
     
     await loadDeliveriesForDate()
   }

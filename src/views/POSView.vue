@@ -188,12 +188,27 @@ const branchProducts = computed(() => {
 })
 const total = computed(() => cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 const roleLabel = computed(() => ({ admin: 'Administrador', manager: 'Encargado', seller: 'Vendedor' }[authStore.user?.role] || ''))
-const canCharge = computed(() => cart.value.length > 0 && cashStore.isOpen && !processing.value && paymentMethod.value && (paymentMethod.value !== 'account' || selectedCustomer.value) && (!isForDelivery.value || (deliveryDate.value && selectedCustomer.value && deliveryAddress.value && totalBultos.value > 0)))
+const canCharge = computed(() => {
+  if (!cart.value.length || processing.value || !paymentMethod.value) return false
+  if (paymentMethod.value === 'account' && !selectedCustomer.value) return false
+  if (isForDelivery.value && !(deliveryDate.value && selectedCustomer.value && deliveryAddress.value && totalBultos.value > 0)) return false
+  // For account payments, we don't require cash to be open since money comes later
+  if (paymentMethod.value !== 'account' && !cashStore.isOpen) return false
+  return true
+})
+
+// Check if user data is persisted on reload - restore from localStorage if available
+onMounted(() => {
+  const savedUser = localStorage.getItem('user')
+  if (savedUser && !authStore.user) {
+    authStore.user = JSON.parse(savedUser)
+  }
+})
 
 function addToCart(product) {
   const existingItem = cart.value.find((item) => item.id === product.id)
   if (existingItem) existingItem.quantity++
-  else cart.value.push({ ...product, quantity: 1 })
+  else cart.value.push({ ...product, quantity: 1, originalProductId: product.id })
 }
 function addQuickFormat(quick) { cart.value.push({ id: `quick-${Date.now()}`, name: quick.name, price: quick.price, quantity: 1, bultos: quick.bultos }) }
 function addFreeAmount() { if (freeAmount.value > 0) { cart.value.push({ id: `free-${Date.now()}`, name: 'Monto libre', price: freeAmount.value, quantity: 1 }); freeAmount.value = 0 } }
@@ -211,7 +226,7 @@ function addManualProduct() {
     return
   }
   
-  const product = branchProducts.value.find(p => p.id === selectedProductId.value)
+  const product = branchProducts.value.find(p => p.id === Number(selectedProductId.value))
   if (!product) {
     alert('Producto no encontrado')
     return

@@ -106,10 +106,25 @@ function savePurchase() {
   }
   purchases.value.unshift(newPurchase)
   
-  // Actualizar el costo del producto si existe en el inventario
+  // Update product cost and add stock
   const existingProduct = inventoryStore.products.find(p => p.name === form.value.product && p.branchId === authStore.currentBranch?.id)
   if (existingProduct) {
     existingProduct.costPrice = unitPrice.value
+    // Add the purchased quantity to stock
+    inventoryStore.updateStock(existingProduct.id, form.value.quantity, 'add')
+  } else {
+    // Create new product with initial stock from purchase
+    const newProduct = {
+      id: Date.now(),
+      name: form.value.product,
+      retailPrice: unitPrice.value * 1.3, // 30% margin default
+      wholesalePrice: unitPrice.value * 1.15,
+      costPrice: unitPrice.value,
+      stock: form.value.quantity,
+      active: true,
+      branchId: authStore.currentBranch?.id
+    }
+    inventoryStore.saveProduct(newProduct)
   }
   
   form.value = { product: '', supplier: '', quantity: 1, totalPrice: 0 }

@@ -10,7 +10,6 @@
         <nav class="flex items-center space-x-4">
           <router-link to="/pos" class="text-gray-600 hover:text-gray-800">POS</router-link>
           <router-link to="/reports" class="text-gray-600 hover:text-gray-800">Reportes</router-link>
-          <router-link to="/customers" class="text-gray-600 hover:text-gray-800">Clientes</router-link>
           <router-link to="/inventory" class="text-gray-600 hover:text-gray-800">Inventario</router-link>
           <router-link to="/logistics" class="text-gray-600 hover:text-gray-800">Logística</router-link>
           <button @click="handleLogout" class="btn-danger ml-4">Salir</button>
@@ -252,10 +251,11 @@ function formatDate(dateStr) {
 
 async function viewMovements(customer) {
   selectedCustomer.value = customer
+  // Get all movements (no date filter to show complete history)
   movements.value = await accountsStore.getCustomerMovements(
     customer.id,
-    new Date().toISOString().split('T')[0],
-    new Date().toISOString().split('T')[0]
+    '2000-01-01',
+    '2099-12-31'
   )
   showMovementsModal.value = true
 }
