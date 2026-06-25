@@ -5,15 +5,14 @@ node_modules/
 # Build artifacts
 dist/
 build/
-target/
+.nuxt/
+.next/
+public/dist/
 
 # Environment variables
 .env
 .env.local
 *.env.*
-
-# Logs
-*.log
 
 # IDE files
 .vscode/
@@ -22,18 +21,31 @@ target/
 *.swo
 *.tmp
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+# Logs
+*.log
 
-# Coverage reports
+# Coverage
 coverage/
 htmlcov/
 .coverage
 
+# Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+
 # OS generated files
 .DS_Store
 Thumbs.db
+
+# Netlify specific
+.netlify/
+
+# Supabase specific
+supabase/.temp/
+supabase/migrations/*.sql
 ```
