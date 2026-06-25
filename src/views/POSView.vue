@@ -150,20 +150,15 @@ import { useAuthStore } from '@/stores/auth'
 import { useLogisticsStore } from '@/stores/logistics'
 import { useCashRegisterStore } from '@/stores/cashRegister'
 import { useAccountsReceivableStore } from '@/stores/accountsReceivable'
+import { useInventoryStore } from '@/stores/inventory'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const logisticsStore = useLogisticsStore()
 const cashStore = useCashRegisterStore()
 const accountsStore = useAccountsReceivableStore()
+const inventoryStore = useInventoryStore()
 
-const products = ref([
-  { id: 1, name: 'Huevo Blanco (30u)', price: 4.50, stock: 100, branchId: 1 },
-  { id: 2, name: 'Huevo Rojo (30u)', price: 4.80, stock: 80, branchId: 1 },
-  { id: 3, name: 'Huevo Orgánico (15u)', price: 3.20, stock: 50, branchId: 1 },
-  { id: 4, name: 'Huevo Blanco (30u)', price: 4.60, stock: 70, branchId: 2 },
-  { id: 5, name: 'Huevo Rojo (30u)', price: 4.90, stock: 55, branchId: 2 },
-])
 const quickFormats = [{ name: 'Maple', price: 4.50, bultos: 1 }, { name: 'Docena', price: 2.00, bultos: 0.4 }]
 const cart = ref([])
 const processing = ref(false)
@@ -186,7 +181,11 @@ const manualPrice = ref(0)
 
 const customers = computed(() => accountsStore.customers.filter((c) => c.active))
 const selectedCustomer = computed(() => customers.value.find((c) => c.id === selectedCustomerId.value))
-const branchProducts = computed(() => products.value.filter((p) => p.branchId === authStore.currentBranch?.id))
+const branchProducts = computed(() => {
+  const products = inventoryStore.products.filter((p) => p.branchId === authStore.currentBranch?.id && p.active)
+  // Mapear retailPrice a price para compatibilidad con el template
+  return products.map(p => ({ ...p, price: p.retailPrice || 0 }))
+})
 const total = computed(() => cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0))
 const roleLabel = computed(() => ({ admin: 'Administrador', manager: 'Encargado', seller: 'Vendedor' }[authStore.user?.role] || ''))
 const canCharge = computed(() => cart.value.length > 0 && cashStore.isOpen && !processing.value && paymentMethod.value && (paymentMethod.value !== 'account' || selectedCustomer.value) && (!isForDelivery.value || (deliveryDate.value && selectedCustomer.value && deliveryAddress.value && totalBultos.value > 0)))
@@ -254,6 +253,14 @@ async function processSale() {
     const response = await fetch('/.netlify/functions/create-sale', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(salePayload) })
     const data = response.ok ? await response.json() : { saleId: Date.now() }
     await cashStore.recordSale(total.value, paymentMethod.value)
+    
+    // Actualizar stock localmente después de la venta
+    for (const item of cart.value) {
+      if (item.originalProductId) {
+        await inventoryStore.updateStock(item.originalProductId, item.quantity, 'remove')
+      }
+    }
+    
     if (isForDelivery.value) await logisticsStore.createDelivery({ saleId: data.saleId || Date.now(), customerName: selectedCustomer.value.name, customerAddress: deliveryAddress.value, customerPhone: selectedCustomer.value.phone, deliveryDate: deliveryDate.value, totalBultos: totalBultos.value })
     cart.value = []; isForDelivery.value = false; deliveryDate.value = ''; totalBultos.value = 0; paymentMethod.value = 'cash'
     alert('Venta registrada con éxito')
@@ -262,5 +269,8 @@ async function processSale() {
   } finally { processing.value = false }
 }
 function handleLogout() { authStore.logout(); router.push('/') }
-onMounted(() => accountsStore.loadCustomers())
+onMounted(async () => {
+  await inventoryStore.loadProducts(authStore.currentBranch?.id)
+  accountsStore.loadCustomers()
+})
 </script>
