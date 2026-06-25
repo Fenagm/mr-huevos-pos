@@ -253,7 +253,6 @@ const capacityWarningMessage = ref('')
 const pendingDeliveryToAssign = ref(null)
 const showVehicleForm = ref(false)
 const vehicleForm = ref({ name: '', license_plate: '', capacity: 0 })
-const routeSheet = ref(null)
 
 // Computed
 const vehicles = computed(() => logisticsStore.vehicles)

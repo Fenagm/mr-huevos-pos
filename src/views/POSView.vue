@@ -10,7 +10,6 @@
           <router-link to="/pos" class="text-blue-600 font-medium">POS</router-link>
           <router-link v-if="authStore.canViewReports()" to="/reports" class="text-gray-600 hover:text-gray-800">Balances</router-link>
           <router-link v-if="authStore.canAccessInventory()" to="/inventory" class="text-gray-600 hover:text-gray-800">Configuración</router-link>
-          <router-link v-if="authStore.canAccessInventory()" to="/purchases" class="text-gray-600 hover:text-gray-800">Compras</router-link>
           <router-link v-if="authStore.canAccessAccountsReceivable()" to="/accounts-receivable" class="text-gray-600 hover:text-gray-800">Cuentas Corrientes</router-link>
           <router-link v-if="authStore.canAccessLogistics()" to="/logistics" class="text-gray-600 hover:text-gray-800">Logística</router-link>
           <button @click="handleLogout" class="btn-danger ml-4">Salir</button>
@@ -79,15 +78,10 @@
             </div>
 
             <div class="space-y-3 border-t pt-4">
-              <label class="block text-sm font-medium text-gray-700">Producto libre</label>
-              <select v-model="customProductName" class="input-field">
-                <option value="Monto libre">Monto libre</option>
-                <option v-for="product in branchProducts" :key="product.id" :value="product.name">{{ product.name }}</option>
-              </select>
-              <div class="grid grid-cols-3 gap-2">
-                <input v-model.number="customQuantity" type="number" min="1" class="input-field" placeholder="Cant." />
-                <input v-model.number="customPrice" type="number" min="0" step="0.01" class="input-field" placeholder="Precio" />
-                <button @click="addCustomLine" class="btn-primary">+</button>
+              <label class="block text-sm font-medium text-gray-700">Monto libre</label>
+              <div class="flex gap-2">
+                <input v-model.number="freeAmount" type="number" min="0" step="0.01" class="input-field" />
+                <button @click="addFreeAmount" class="btn-primary">+</button>
               </div>
 
               <label class="block text-sm font-medium text-gray-700">Cliente frecuente</label>
@@ -148,9 +142,7 @@ const quickFormats = [{ name: 'Maple', price: 4.50, bultos: 1 }, { name: 'Docena
 const cart = ref([])
 const processing = ref(false)
 const paymentMethod = ref('cash')
-const customProductName = ref('Monto libre')
-const customQuantity = ref(1)
-const customPrice = ref(0)
+const freeAmount = ref(0)
 const initialCash = ref(0)
 const finalCash = ref(0)
 const expense = ref({ description: '', amount: 0 })
@@ -174,14 +166,7 @@ function addToCart(product) {
   else cart.value.push({ ...product, quantity: 1 })
 }
 function addQuickFormat(quick) { cart.value.push({ id: `quick-${Date.now()}`, name: quick.name, price: quick.price, quantity: 1, bultos: quick.bultos }) }
-function addCustomLine() {
-  if (customQuantity.value > 0 && customPrice.value > 0) {
-    cart.value.push({ id: `custom-${Date.now()}`, name: customProductName.value || 'Monto libre', price: customPrice.value, quantity: customQuantity.value })
-    customProductName.value = 'Monto libre'
-    customQuantity.value = 1
-    customPrice.value = 0
-  }
-}
+function addFreeAmount() { if (freeAmount.value > 0) { cart.value.push({ id: `free-${Date.now()}`, name: 'Monto libre', price: freeAmount.value, quantity: 1 }); freeAmount.value = 0 } }
 function removeFromCart(index) { cart.value.splice(index, 1) }
 function syncDeliveryAddress() { deliveryAddress.value = selectedCustomer.value?.address || '' }
 async function openCash() { const r = await cashStore.openSession(initialCash.value || 0, authStore.user.id, authStore.currentBranch.id); if (!r.success) alert(r.error) }
