@@ -83,9 +83,10 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
 
       if (response.ok) {
         const savedSession = await response.json()
-        currentSession.value = savedSession
-        sessions.value.push(savedSession)
-        return { success: true, session: savedSession }
+        // Merge backend response with local session to ensure all fields are present
+        currentSession.value = { ...newSession, ...savedSession }
+        sessions.value.push(currentSession.value)
+        return { success: true, session: currentSession.value }
       } else {
         throw new Error('Failed to open session')
       }
@@ -125,12 +126,14 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
 
       if (response.ok) {
         const updatedSession = await response.json()
+        // Merge to preserve all fields
+        const mergedSession = { ...currentSession.value, ...updatedSession }
         const index = sessions.value.findIndex(s => s.id === currentSession.value.id)
         if (index !== -1) {
-          sessions.value[index] = updatedSession
+          sessions.value[index] = mergedSession
         }
         currentSession.value = null
-        return { success: true, session: updatedSession, difference }
+        return { success: true, session: mergedSession, difference }
       } else {
         throw new Error('Failed to close session')
       }
@@ -253,12 +256,16 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
       if (response.ok) {
         const data = await response.json()
         expenses.value = data.expenses || []
+        // Add sessionId to demo expenses so filtering works
+        if (expenses.value.length === 0 && demoExpenses.length > 0) {
+          expenses.value = demoExpenses.map(e => ({ ...e, sessionId }))
+        }
       } else {
         throw new Error('Failed to load expenses')
       }
     } catch (error) {
-      // Demo mode
-      expenses.value = [...demoExpenses]
+      // Demo mode - add sessionId so filtering works
+      expenses.value = demoExpenses.map(e => ({ ...e, sessionId }))
     }
   }
 

@@ -1,10 +1,10 @@
 export const handler = async (event) => {
-  const { customerId, isActive } = JSON.parse(event.body || '{}')
+  const { customerId, active } = JSON.parse(event.body || '{}')
   
-  console.log('Customer status toggled:', { customerId, isActive })
+  console.log('Customer status toggled:', { customerId, active })
   
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, customerId, isActive }),
+    body: JSON.stringify({ success: true, customerId, active }),
   }
 }

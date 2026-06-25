@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(null)
+  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
   const token = ref(localStorage.getItem('token') || null)
   const currentBranch = ref(JSON.parse(localStorage.getItem('currentBranch') || 'null'))
   
@@ -32,6 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = data.user
         token.value = data.token
         localStorage.setItem('token', data.token)
+        localStorage.setItem('user', JSON.stringify(data.user))
         if (data.user.branchId) {
           currentBranch.value = { id: data.user.branchId, name: data.user.branchName }
           localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
@@ -48,6 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = safeDemoUser
         token.value = 'demo-token'
         localStorage.setItem('token', 'demo-token')
+        localStorage.setItem('user', JSON.stringify(safeDemoUser))
         currentBranch.value = { id: safeDemoUser.branchId, name: safeDemoUser.branchName }
         localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
         return { success: true }
@@ -57,6 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = { id: 1, username: 'admin', role: 'admin', branchId: 1, branchName: 'Centenario' }
         token.value = 'demo-token'
         localStorage.setItem('token', 'demo-token')
+        localStorage.setItem('user', JSON.stringify(user.value))
         currentBranch.value = { id: 1, name: 'Centenario' }
         localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
         return { success: true }
@@ -70,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     currentBranch.value = null
     localStorage.removeItem('token')
+    localStorage.removeItem('user')
     localStorage.removeItem('currentBranch')
     fetch('/.netlify/functions/logout', { method: 'POST' }).catch(() => {})
   }

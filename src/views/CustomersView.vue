@@ -116,11 +116,8 @@ const authStore = useAuthStore()
 const search = ref('')
 const showModal = ref(false)
 
-const customers = ref([
-  { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '555-1234', address: 'Calle Falsa 123', totalPurchases: 150.00 },
-  { id: 2, name: 'María García', email: 'maria@email.com', phone: '555-5678', address: 'Av. Siempre Viva 742', totalPurchases: 280.50 },
-  { id: 3, name: 'Carlos López', email: 'carlos@email.com', phone: '555-9012', address: 'Belgrano 456', totalPurchases: 95.00 },
-])
+// Customers are now loaded from accountsReceivableStore to ensure synchronization
+const customers = ref([])
 
 const newCustomer = ref({
   name: '',

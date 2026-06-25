@@ -29,7 +29,7 @@
             <button v-if="authStore.isAdmin" @click="showProductModal = true; editingProduct = null" class="w-full btn-primary mb-2">
               + Nuevo Producto
             </button>
-            <button v-if="authStore.isAdmin || authStore.isSeller" @click="showSpoilageModal = true" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+            <button v-if="authStore.isAdmin" @click="showSpoilageModal = true" class="w-full bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
               🗑️ Registrar Merma
             </button>
           </div>
