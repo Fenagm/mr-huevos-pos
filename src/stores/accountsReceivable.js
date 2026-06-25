@@ -68,7 +68,8 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
     try {
       const response = await fetch('/.netlify/functions/get-customers-accounts')
       if (response.ok) {
-        customers.value = await response.json()
+        const data = await response.json()
+        customers.value = data.customers || []
       } else {
         throw new Error('Failed to load customers')
       }

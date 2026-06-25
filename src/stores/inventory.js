@@ -101,7 +101,8 @@ export const useInventoryStore = defineStore('inventory', () => {
       
       const response = await fetch(url)
       if (response.ok) {
-        products.value = await response.json()
+        const data = await response.json()
+        products.value = data.products || []
       } else {
         throw new Error('Failed to load products')
       }
@@ -237,7 +238,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     try {
       const response = await fetch(`/.netlify/functions/get-spoilages?startDate=${startDate}&endDate=${endDate}`)
       if (response.ok) {
-        spoilages.value = await response.json()
+        const data = await response.json()
+        spoilages.value = data.spoilages || []
       } else {
         throw new Error('Failed to load spoilages')
       }

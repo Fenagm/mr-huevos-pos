@@ -97,7 +97,8 @@ export const useLogisticsStore = defineStore('logistics', () => {
     try {
       const response = await fetch('/.netlify/functions/get-vehicles')
       if (response.ok) {
-        vehicles.value = await response.json()
+        const data = await response.json()
+        vehicles.value = data.vehicles || []
       } else {
         throw new Error('Failed to load vehicles')
       }
@@ -112,7 +113,8 @@ export const useLogisticsStore = defineStore('logistics', () => {
     try {
       const response = await fetch(`/.netlify/functions/get-deliveries?date=${date}`)
       if (response.ok) {
-        deliveries.value = await response.json()
+        const data = await response.json()
+        deliveries.value = data.deliveries || []
       } else {
         throw new Error('Failed to load deliveries')
       }
