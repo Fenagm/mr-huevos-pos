@@ -78,6 +78,10 @@ export const useInventoryStore = defineStore('inventory', () => {
 
   // Computed
   const activeProducts = computed(() => products.value.filter(p => p.active))
+
+  function productsByBranch(branchId) {
+    return products.value.filter(p => p.branchId === branchId)
+  }
   
   const totalInventoryValue = computed(() => {
     return products.value.reduce((sum, p) => sum + (p.costPrice * p.stock), 0)
@@ -103,7 +107,7 @@ export const useInventoryStore = defineStore('inventory', () => {
       }
     } catch (error) {
       // Demo mode
-      products.value = [...demoProducts]
+      products.value = branchId ? demoProducts.filter(p => p.branchId === branchId) : [...demoProducts]
     } finally {
       loading.value = false
     }
@@ -204,6 +208,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     const newSpoilage = {
       id: Date.now(),
       ...spoilageData,
+      branchId: spoilageData.branchId || products.value.find(p => p.id === spoilageData.productId)?.branchId,
       createdAt: new Date().toISOString(),
     }
 
@@ -254,6 +259,7 @@ export const useInventoryStore = defineStore('inventory', () => {
     spoilages,
     loading,
     activeProducts,
+    productsByBranch,
     totalInventoryValue,
     lowStockProducts,
     loadProducts,

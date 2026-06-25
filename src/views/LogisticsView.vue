@@ -16,6 +16,19 @@
 
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 py-6">
+      <div class="card mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">Flota de reparto</h2>
+          <button @click="showVehicleForm = !showVehicleForm" class="btn-primary">+ Vehículo</button>
+        </div>
+        <form v-if="showVehicleForm" @submit.prevent="saveVehicle" class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <input v-model="vehicleForm.name" class="input-field" placeholder="Nombre del vehículo" required />
+          <input v-model="vehicleForm.license_plate" class="input-field" placeholder="Patente" />
+          <input v-model.number="vehicleForm.capacity" type="number" min="1" class="input-field" placeholder="Capacidad máx. bultos/maples" required />
+          <button class="btn-primary">Guardar vehículo</button>
+        </form>
+      </div>
+
       <!-- Date Selector -->
       <div class="card mb-6">
         <div class="flex items-center justify-between">
@@ -93,6 +106,13 @@
                 <h3 class="text-lg font-semibold">{{ vehicle.name }}</h3>
                 <span class="text-xs bg-gray-200 px-2 py-1 rounded">{{ vehicle.license_plate }}</span>
               </div>
+              <button
+                v-if="getVehicleDeliveries(vehicle.id).length > 1"
+                @click="generateOptimalRoute(vehicle.id)"
+                class="w-full mb-4 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 text-sm"
+              >
+                Generar hoja de ruta óptima
+              </button>
               
               <!-- Capacity Indicator -->
               <div class="mb-4">
@@ -180,6 +200,25 @@
       </div>
     </main>
 
+    <div v-if="routeSheet" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="card w-full max-w-2xl">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-lg font-bold">Hoja de ruta óptima</h3>
+            <p class="text-sm text-gray-500">{{ routeSheet.vehicleName }} · {{ formatDate(selectedDate) }}</p>
+          </div>
+          <button @click="routeSheet = null" class="text-gray-500 hover:text-gray-700">✕</button>
+        </div>
+        <ol class="space-y-3 list-decimal list-inside">
+          <li v-for="delivery in routeSheet.deliveries" :key="delivery.id" class="border rounded-lg p-3 bg-gray-50">
+            <strong>{{ delivery.customer_name }}</strong> — {{ delivery.customer_address }}
+            <div class="text-xs text-gray-600 ml-5">{{ delivery.total_bultos }} bultos · Tel: {{ delivery.customer_phone }}</div>
+          </li>
+        </ol>
+        <p class="mt-4 text-xs text-gray-500">Criterio demo: ordenamiento por dirección para agrupar paradas cercanas; listo para reemplazar por integración geográfica en producción.</p>
+      </div>
+    </div>
+
     <!-- Capacity Warning Modal -->
     <div v-if="showCapacityWarning" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div class="card w-full max-w-md bg-red-50 border-2 border-red-500">
@@ -212,6 +251,9 @@ const selectedDate = ref(new Date().toISOString().split('T')[0])
 const showCapacityWarning = ref(false)
 const capacityWarningMessage = ref('')
 const pendingDeliveryToAssign = ref(null)
+const showVehicleForm = ref(false)
+const vehicleForm = ref({ name: '', license_plate: '', capacity: 0 })
+const routeSheet = ref(null)
 
 // Computed
 const vehicles = computed(() => logisticsStore.vehicles)
@@ -251,6 +293,14 @@ async function loadDeliveriesForDate() {
   await logisticsStore.loadDeliveries(selectedDate.value)
 }
 
+async function saveVehicle() {
+  const result = await logisticsStore.saveVehicle(vehicleForm.value)
+  if (result.success) {
+    vehicleForm.value = { name: '', license_plate: '', capacity: 0 }
+    showVehicleForm.value = false
+  }
+}
+
 async function confirmAssignment(delivery) {
   if (!delivery.temp_vehicle_id) return
   
@@ -281,6 +331,23 @@ async function confirmAssignment(delivery) {
     capacityWarningMessage.value = result.error
     showCapacityWarning.value = true
     delivery.temp_vehicle_id = ''
+  }
+}
+
+async function generateOptimalRoute(vehicleId) {
+  const vehicle = vehicles.value.find(v => v.id === vehicleId)
+  const optimized = [...getVehicleDeliveries(vehicleId)].sort((a, b) =>
+    (a.customer_address || '').localeCompare(b.customer_address || '', 'es')
+  )
+
+  for (const [index, delivery] of optimized.entries()) {
+    await logisticsStore.updateRouteOrder(delivery.id, index + 1)
+  }
+
+  await loadDeliveriesForDate()
+  routeSheet.value = {
+    vehicleName: vehicle?.name || 'Vehículo',
+    deliveries: optimized.map((delivery, index) => ({ ...delivery, route_order: index + 1 })),
   }
 }
 

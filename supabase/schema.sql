@@ -60,3 +60,24 @@ INSERT INTO products (name, price, stock) VALUES
 ('Huevo Azul (30u)', 5.00, 40),
 ('Cartón Vacío', 0.50, 200)
 ON CONFLICT DO NOTHING;
+
+-- Production extensions for branches, payment reporting, customer addresses and purchases
+ALTER TABLE users ADD COLUMN IF NOT EXISTS branch_id INTEGER;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS branch_id INTEGER;
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS payment_method VARCHAR(30) DEFAULT 'cash';
+
+CREATE TABLE IF NOT EXISTS purchases (
+  id SERIAL PRIMARY KEY,
+  branch_id INTEGER NOT NULL,
+  product_id INTEGER REFERENCES products(id),
+  product_name VARCHAR(100) NOT NULL,
+  supplier VARCHAR(120) NOT NULL,
+  quantity INTEGER NOT NULL,
+  total_price DECIMAL(10,2) NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_purchases_branch_created_at ON purchases(branch_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_sales_branch_payment ON sales(branch_id, payment_method);

@@ -39,6 +39,7 @@
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Nombre</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Email</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Teléfono</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Dirección</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Compras</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Acciones</th>
               </tr>
@@ -52,6 +53,7 @@
                 <td class="px-4 py-3 text-sm">{{ customer.name }}</td>
                 <td class="px-4 py-3 text-sm">{{ customer.email }}</td>
                 <td class="px-4 py-3 text-sm">{{ customer.phone }}</td>
+                <td class="px-4 py-3 text-sm">{{ customer.address }}</td>
                 <td class="px-4 py-3 text-sm">${{ customer.totalPurchases.toFixed(2) }}</td>
                 <td class="px-4 py-3 text-sm">
                   <button class="text-blue-600 hover:text-blue-800 mr-3">Editar</button>
@@ -86,6 +88,10 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">Teléfono</label>
             <input v-model="newCustomer.phone" type="tel" class="input-field" />
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Dirección</label>
+            <input v-model="newCustomer.address" type="text" class="input-field" placeholder="Dirección de entrega" />
+          </div>
           
           <div class="flex space-x-3 pt-4">
             <button type="button" @click="showModal = false" class="flex-1 border border-gray-300 rounded-lg py-2 hover:bg-gray-50">
@@ -111,15 +117,16 @@ const search = ref('')
 const showModal = ref(false)
 
 const customers = ref([
-  { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '555-1234', totalPurchases: 150.00 },
-  { id: 2, name: 'María García', email: 'maria@email.com', phone: '555-5678', totalPurchases: 280.50 },
-  { id: 3, name: 'Carlos López', email: 'carlos@email.com', phone: '555-9012', totalPurchases: 95.00 },
+  { id: 1, name: 'Juan Pérez', email: 'juan@email.com', phone: '555-1234', address: 'Calle Falsa 123', totalPurchases: 150.00 },
+  { id: 2, name: 'María García', email: 'maria@email.com', phone: '555-5678', address: 'Av. Siempre Viva 742', totalPurchases: 280.50 },
+  { id: 3, name: 'Carlos López', email: 'carlos@email.com', phone: '555-9012', address: 'Belgrano 456', totalPurchases: 95.00 },
 ])
 
 const newCustomer = ref({
   name: '',
   email: '',
   phone: '',
+  address: '',
 })
 
 const filteredCustomers = computed(() => {
@@ -129,7 +136,8 @@ const filteredCustomers = computed(() => {
   return customers.value.filter(c => 
     c.name.toLowerCase().includes(term) ||
     c.email?.toLowerCase().includes(term) ||
-    c.phone?.includes(term)
+    c.phone?.includes(term) ||
+    c.address?.toLowerCase().includes(term)
   )
 })
 
@@ -140,7 +148,7 @@ function saveCustomer() {
     totalPurchases: 0,
   })
   
-  newCustomer.value = { name: '', email: '', phone: '' }
+  newCustomer.value = { name: '', email: '', phone: '', address: '' }
   showModal.value = false
   alert('Cliente guardado (modo demo)')
 }
