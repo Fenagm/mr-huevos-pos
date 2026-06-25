@@ -1,0 +1,120 @@
+```
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Package manager caches
+.npm/
+.yarn/
+.pnpm-store/
+.bazel-cache/
+
+# Testing
+.mypy_cache/
+.pytest_cache/
+.nyc_output/
+coverage/
+
+# Runtime data
+logs/
+tmp/
+temp/
+
+# Compiled CSS/JS
+*.min.js
+*.min.css
+
+# Lock files
+package-lock.json
+yarn.lock
+Pipfile.lock
+poetry.lock
+
+# Secrets
+secrets/
+*.key
+*.pem
+*.crt
+*.cert
+
+# Documentation builds
+_site/
+_sass-cache/
+
+# Vim swap files
+*.un~
+Session.vim
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+
+# Backup files
+*.bak
+*.swp
+*.swo
+
+# Distribution / packaging
+*.tar.gz
+*.egg-info/
+
+# Generated files
+generated/
+.autotools/
+.libs/
+
+# SQLite
+*.db-shm
+*.db-wal
+
+# Webpack
+webpack.config.js
+
+# Vite
+vite.config.js
+
+# Supabase
+supabase/.temp/
+supabase/migrations/*.sql
+```
