@@ -126,6 +126,10 @@ export const useLogisticsStore = defineStore('logistics', () => {
     const delivery = deliveries.value.find(d => d.id === deliveryId)
     if (!delivery) return { success: false, error: 'Entrega no encontrada' }
     
+    if (!vehicleId) {
+      return { success: false, error: 'Seleccione un vehículo' }
+    }
+    
     // Check capacity before assigning
     if (wouldExceedCapacity(vehicleId, delivery.total_bultos)) {
       return { 
@@ -152,11 +156,15 @@ export const useLogisticsStore = defineStore('logistics', () => {
         throw new Error('Failed to assign delivery')
       }
     } catch (error) {
-      // Demo mode
+      // Demo mode - update local state
       const index = deliveries.value.findIndex(d => d.id === deliveryId)
       if (index !== -1) {
         deliveries.value[index].vehicle_id = vehicleId
         deliveries.value[index].status = 'assigned'
+        // Assign next available route order
+        const vehicleDeliveries = deliveries.value.filter(d => d.vehicle_id === vehicleId && d.delivery_date === selectedDate.value)
+        const nextOrder = vehicleDeliveries.length + 1
+        deliveries.value[index].route_order = nextOrder
       }
       return { success: true }
     }

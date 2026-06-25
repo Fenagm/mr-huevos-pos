@@ -1,4 +1,3 @@
-```
 # Dependencies
 node_modules/
 
@@ -7,114 +6,164 @@ dist/
 build/
 target/
 
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
 # Environment variables
 .env
 .env.local
 .env.*
 
-# IDE files
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
 
 # Logs
 *.log
 
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
 # OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Coverage reports
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+node_modules/
+jspm_packages/
+web_modules/
+lib-cov/
 coverage/
-htmlcov/
-.coverage
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Package manager caches
-.npm/
-.yarn/
-.pnpm-store/
-.bazel-cache/
-
-# Testing
-.mypy_cache/
-.pytest_cache/
 .nyc_output/
-coverage/
+.tap
 
-# Runtime data
-logs/
-tmp/
-temp/
+# TypeScript
+*.tsbuildinfo
+*.js.map
+*.ts.map
 
-# Compiled CSS/JS
-*.min.js
-*.min.css
-
-# Lock files
-package-lock.json
-yarn.lock
-Pipfile.lock
-poetry.lock
-
-# Secrets
-secrets/
-*.key
-*.pem
-*.crt
-*.cert
-
-# Documentation builds
-_site/
-_sass-cache/
-
-# Vim swap files
-*.un~
-Session.vim
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-
-# Backup files
-*.bak
-*.swp
-*.swo
-
-# Distribution / packaging
-*.tar.gz
-*.egg-info/
-
-# Generated files
-generated/
-.autotools/
-.libs/
-
-# SQLite
-*.db-shm
-*.db-wal
+# Vue
+.vuepress/dist
+.nuxt
+.dist
 
 # Webpack
-webpack.config.js
-
-# Vite
-vite.config.js
+webpack-stats.json
+*.bundle.js
+*.chunk.js
 
 # Supabase
 supabase/.temp/
 supabase/migrations/*.sql
-```
+
+# General build outputs
+*.min.js
+*.min.css
+*.bundle.js
+*.bundle.css
+*.map
+*.wasm
+*.lock
+*.lockb
+*.lockt
+*.locky
+*.lockz
+*.locka
+*.lockb
+*.lockc
+*.lockd
+*.locke
+*.lockf
+*.lockg
+*.lockh
+*.locki
+*.lockj
+*.lockk
+*.lockl
+*.lockm
+*.lockn
+*.locko
+*.lockp
+*.lockq
+*.lockr
+*.locks
+*.lockt
+*.locku
+*.lockv
+*.lockw
+*.lockx
+*.locky
+*.lockz
+*.lockA
+*.lockB
+*.lockC
+*.lockD
+*.lockE
+*.lockF
+*.lockG
+*.lockH
+*.lockI
+*.lockJ
+*.lockK
+*.lockL
+*.lockM
+*.lockN
+*.lockO
+*.lockP
+*.lockQ
+*.lockR
+*.lockS
+*.lockT
+*.lockU
+*.lockV
+*.lockW
+*.lockX
+*.lockY
+*.lockZ
+*.lock0
+*.lock1
+*.lock2
+*.lock3
+*.lock4
+*.lock5
+*.lock6
+*.lock7
+*.lock8
+*.lock9
