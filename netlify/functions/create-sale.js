@@ -1,15 +1,31 @@
 export const handler = async (event) => {
-  const { items, total, userId } = JSON.parse(event.body);
+  const {
+    items = [],
+    total = 0,
+    userId,
+    branchId,
+    paymentMethod,
+    customerId = null,
+    isForDelivery = false,
+  } = JSON.parse(event.body || '{}')
 
-  // Demo mode - in production, save to Supabase
-  console.log('Sale created:', { items, total, userId, date: new Date().toISOString() });
+  const sale = {
+    saleId: Date.now(),
+    items,
+    total,
+    userId,
+    branchId,
+    paymentMethod,
+    customerId,
+    isForDelivery,
+    date: new Date().toISOString(),
+  }
+
+  // Demo mode - in production, save to Supabase enforcing branch_id in every table.
+  console.log('Sale created:', sale)
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ 
-      success: true, 
-      saleId: Date.now(),
-      message: 'Venta registrada'
-    }),
-  };
-};
+    body: JSON.stringify({ success: true, ...sale, message: 'Venta registrada' }),
+  }
+}

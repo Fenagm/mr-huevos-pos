@@ -40,7 +40,7 @@
       </form>
 
       <p class="mt-6 text-xs text-gray-500 text-center">
-        Demo: usuario "admin", cualquier contraseña
+        Demo: admin/admin123 · encargado/encargado123 · vendedor/vendedor123
       </p>
     </div>
   </div>

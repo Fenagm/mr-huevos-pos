@@ -19,9 +19,9 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
   
   const currentBalance = computed(() => {
     if (!currentSession.value) return 0
-    const totalIncome = currentSession.value.cash || 0 + 
-                        currentSession.value.cards || 0 + 
-                        currentSession.value.transfers || 0
+    const totalIncome = (currentSession.value.cashSales || 0) +
+                        (currentSession.value.cardSales || 0) +
+                        (currentSession.value.transferSales || 0)
     const totalExpenses = expenses.value
       .filter(e => e.sessionId === currentSession.value.id)
       .reduce((sum, e) => sum + e.amount, 0)
