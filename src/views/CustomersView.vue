@@ -40,7 +40,7 @@
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Email</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Teléfono</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Dirección</th>
-                <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Compras</th>
+                <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Saldo deuda</th>
                 <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Acciones</th>
               </tr>
             </thead>
@@ -54,7 +54,7 @@
                 <td class="px-4 py-3 text-sm">{{ customer.email }}</td>
                 <td class="px-4 py-3 text-sm">{{ customer.phone }}</td>
                 <td class="px-4 py-3 text-sm">{{ customer.address }}</td>
-                <td class="px-4 py-3 text-sm">${{ customer.totalPurchases.toFixed(2) }}</td>
+                <td class="px-4 py-3 text-sm">${{ (customer.accountBalance || 0).toFixed(2) }}</td>
                 <td class="px-4 py-3 text-sm">
                   <button class="text-blue-600 hover:text-blue-800 mr-3">Editar</button>
                   <button class="text-red-600 hover:text-red-800">Eliminar</button>
@@ -106,18 +106,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useAccountsReceivableStore } from '@/stores/accountsReceivable'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const accountsStore = useAccountsReceivableStore()
 
 const search = ref('')
 const showModal = ref(false)
-
-// Customers are now loaded from accountsReceivableStore to ensure synchronization
-const customers = ref([])
 
 const newCustomer = ref({
   name: '',
@@ -126,11 +125,13 @@ const newCustomer = ref({
   address: '',
 })
 
+// Fuente de verdad: el store compartido con Cuentas Corrientes
+const customers = computed(() => accountsStore.customers)
+
 const filteredCustomers = computed(() => {
   if (!search.value) return customers.value
-  
   const term = search.value.toLowerCase()
-  return customers.value.filter(c => 
+  return customers.value.filter(c =>
     c.name.toLowerCase().includes(term) ||
     c.email?.toLowerCase().includes(term) ||
     c.phone?.includes(term) ||
@@ -138,20 +139,30 @@ const filteredCustomers = computed(() => {
   )
 })
 
-function saveCustomer() {
-  customers.value.push({
+async function saveCustomer() {
+  const newC = {
     id: Date.now(),
     ...newCustomer.value,
+    accountBalance: 0,
+    creditLimit: 500,
+    active: true,
     totalPurchases: 0,
-  })
-  
+  }
+  // Agrega al store compartido para que Cuentas Corrientes también lo vea
+  accountsStore.customers.push(newC)
   newCustomer.value = { name: '', email: '', phone: '', address: '' }
   showModal.value = false
-  alert('Cliente guardado (modo demo)')
+  alert('Cliente guardado')
 }
 
 function handleLogout() {
   authStore.logout()
   router.push('/')
 }
+
+onMounted(async () => {
+  if (accountsStore.customers.length === 0) {
+    await accountsStore.loadCustomers()
+  }
+})
 </script>

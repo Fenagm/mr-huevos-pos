@@ -1,19 +1,32 @@
 export const handler = async (event) => {
-  const { customerId, address, items, total, phone } = JSON.parse(event.body || '{}')
-  
+  const {
+    id,
+    sale_id,
+    customer_name,
+    customer_address,
+    customer_phone,
+    delivery_date,
+    total_bultos,
+    notes = '',
+  } = JSON.parse(event.body || '{}')
+
   const delivery = {
-    deliveryId: Date.now(),
-    customerId,
-    address,
-    items,
-    total,
-    phone,
+    id: id || Date.now(),
+    sale_id,
+    customer_name,
+    customer_address,
+    customer_phone,
+    delivery_date,
+    vehicle_id: null,
+    route_order: null,
     status: 'pending',
-    createdAt: new Date().toISOString(),
+    total_bultos,
+    notes,
+    created_at: new Date().toISOString(),
   }
-  
+
   console.log('Delivery created:', delivery)
-  
+
   return {
     statusCode: 200,
     body: JSON.stringify({ success: true, ...delivery }),
