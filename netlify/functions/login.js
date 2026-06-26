@@ -1,8 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
+import bcrypt from 'bcryptjs' // Importación estática obligatoria para Serverless
 
 export const handler = async (event) => {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL
-  const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' }
+  }
+
+  // Usar variables estándar de Backend (SIN el prefijo VITE_)
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseKey = process.env.SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseKey) {
     console.error('[login] Missing Supabase credentials in environment variables')
@@ -10,7 +16,7 @@ export const handler = async (event) => {
       statusCode: 500,
       body: JSON.stringify({ 
         success: false, 
-        error: 'Configuración del servidor incompleta. Contacte al administrador.' 
+        error: 'Configuración del servidor incompleta. Faltan variables de entorno.' 
       }),
     }
   }
@@ -26,75 +32,64 @@ export const handler = async (event) => {
   }
 
   try {
-  // Buscar usuario haciendo un JOIN con la tabla 'branches' para traer el nombre
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('id, username, role, name, password_hash, branch_id, branches(name)')
-    .eq('username', username)
-    .single()
+    // Buscar usuario e incluir JOIN con branches para el nombre de la sucursal
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('id, username, role, branch_id, name, password_hash, branches(name)')
+      .eq('username', username)
+      .single()
 
-  if (error || !user) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
-    }
-  }
-
-  // Verificar contraseña
-  const passwordsMatch = await verifyPassword(password, user.password_hash)
-  
-  if (!passwordsMatch) {
-    return {
-      statusCode: 401,
-      body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
-    }
-  }
-  
-  // Como estás usando una tabla customizada y no Supabase Auth nativo,
-  // generamos un token para que el frontend valide la sesión (en prod puedes usar JWT)
-  const fakeToken = `session_${user.id}_${Date.now()}`
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ 
-      success: true, 
-      token: fakeToken, // <-- Agregado para cumplir con auth.js
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-        branchId: user.branch_id,
-        branchName: user.branches ? user.branches.name : null, // <-- Agregado para cumplir con auth.js
-        name: user.name
+    if (error || !user) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ success: false, error: 'Credenciales inválidas: El usuario no existe.' }),
       }
-    }),
-  }
-} catch (err) {
+    }
+
+    // Verificar contraseña con el método seguro
+    const passwordsMatch = await verifyPassword(password, user.password_hash)
+    
+    if (!passwordsMatch) {
+      return {
+        statusCode: 401,
+        body: JSON.stringify({ success: false, error: 'Credenciales inválidas: Contraseña incorrecta.' }),
+      }
+    }
+    
+    // Retornar la estructura exacta que espera tu auth.js store
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        success: true, 
+        token: `session_${user.id}_${Date.now()}`,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+          branchId: user.branch_id,
+          branchName: user.branches ? user.branches.name : 'Sin Sucursal',
+          name: user.name
+        }
+      }),
+    }
+  } catch (err) {
     console.error('[login] Error:', err)
     return {
       statusCode: 500,
-      body: JSON.stringify({ success: false, error: 'Error interno del servidor' }),
+      body: JSON.stringify({ success: false, error: `Error interno: ${err.message}` }),
     }
   }
 }
 
-// Función para verificar contraseña
-// En producción, instala bcryptjs y usa: bcrypt.compare(password, hash)
+// Función limpia para verificar la contraseña usando bcrypt formalmente
 async function verifyPassword(password, hash) {
-  // Si no hay hash almacenado, permitir cualquier contraseña (SOLO DESARROLLO)
-  if (!hash) {
-    console.warn('[login] No password_hash found for user. Allowing login for development.')
-    return true
+  if (!hash || !password) return false
+
+  // Soporte tanto para clave encriptada como para texto plano en modo desarrollo
+  if (hash.startsWith('$2a$') || hash.startsWith('$2b$')) {
+    return await bcrypt.compare(password, hash)
   }
   
-  // Intentar cargar bcryptjs dinámicamente si está disponible
-  try {
-    const bcrypt = await import('bcryptjs')
-    return await bcrypt.compare(password, hash)
-  } catch (e) {
-    // bcryptjs no está instalado - modo desarrollo
-    console.warn('[login] bcryptjs not available. Using plain text comparison (DEV ONLY)')
-    // Comparación simple para desarrollo (NO USAR EN PRODUCCIÓN)
-    return password === hash
-  }
+  return password === hash
 }
