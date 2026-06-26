@@ -1,13 +1,12 @@
 export const handler = async (event) => {
-  // Demo customers with fields matching what the store expects: id, accountBalance, creditLimit, active
-  const customers = [
-    { id: 1, name: 'Juan Pérez', accountBalance: 50000, creditLimit: 100000, active: true },
-    { id: 2, name: 'María Gómez', accountBalance: 25000, creditLimit: 75000, active: true },
-    { id: 3, name: 'Carlos Ruiz', accountBalance: 0, creditLimit: 50000, active: true },
-  ]
-  
+  console.log('Getting customers accounts')
+
+  // En producción con Supabase:
+  // SELECT id, name, account_balance, credit_limit, active FROM customers ORDER BY name ASC
+
+  // Sin datos demo — devolver array vacío si no hay backend conectado
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, customers }),
+    body: JSON.stringify({ success: true, customers: [] }),
   }
 }

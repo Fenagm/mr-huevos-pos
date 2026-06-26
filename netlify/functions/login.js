@@ -1,26 +1,20 @@
 export const handler = async (event) => {
-  // TODO: In production, validate Authorization header with JWT verification
-  // const authHeader = event.headers.Authorization
-  // if (!authHeader || !validateToken(authHeader.replace('Bearer ', ''))) {
-  //   return { statusCode: 401, body: JSON.stringify({ error: 'Unauthorized' }) }
-  // }
-  
-  const users = [
-    { id: 1, username: 'admin', password: 'admin123', role: 'admin', branchId: 1, branchName: 'Centenario' },
-    { id: 2, username: 'encargado', password: 'encargado123', role: 'manager', branchId: 1, branchName: 'Centenario' },
-    { id: 3, username: 'vendedor', password: 'vendedor123', role: 'seller', branchId: 2, branchName: 'Caaguazú' },
-  ]
+  // En producción con Supabase:
+  // 1. Validar JWT desde el header Authorization
+  // 2. Consultar usuario desde la tabla users de Supabase
+  // SELECT id, username, role, branch_id FROM users WHERE username = $1
   
   const { username, password } = JSON.parse(event.body || '{}')
-  const user = users.find((u) => u.username === username && u.password === password)
-  
-  if (!user) {
-    return { statusCode: 401, body: JSON.stringify({ error: 'Credenciales inválidas' }) }
-  }
 
-  const { password: _password, ...safeUser } = user
+  console.log('Login attempt:', { username })
+
+  // Sin datos demo — en desarrollo local se puede usar autenticación básica
+  // Para producción, conectar con Supabase Auth o base de datos de usuarios
   return {
-    statusCode: 200,
-    body: JSON.stringify({ user: safeUser, token: `demo-token-${safeUser.role}-${Date.now()}` }),
+    statusCode: 501,
+    body: JSON.stringify({ 
+      error: 'Backend no configurado. Conectar con Supabase para autenticación.',
+      hint: 'Configurar VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY'
+    }),
   }
 }

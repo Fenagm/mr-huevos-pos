@@ -11,13 +11,6 @@ export const useAuthStore = defineStore('auth', () => {
   const isManager = computed(() => user.value?.role === 'manager')
   const isSeller = computed(() => user.value?.role === 'seller')
   
-  // Demo users with branches
-  const demoUsers = [
-    { id: 1, username: 'admin', password: 'admin123', role: 'admin', branchId: 1, branchName: 'Centenario' },
-    { id: 2, username: 'encargado', password: 'encargado123', role: 'manager', branchId: 1, branchName: 'Centenario' },
-    { id: 3, username: 'vendedor', password: 'vendedor123', role: 'seller', branchId: 2, branchName: 'Caaguazú' },
-  ]
-
   async function login(username, password) {
     try {
       const response = await fetch('/.netlify/functions/login', {
@@ -42,29 +35,11 @@ export const useAuthStore = defineStore('auth', () => {
         return { success: false, error: data.error }
       }
     } catch (error) {
-      // Demo mode - accept any password for known users
-      const demoUser = demoUsers.find(u => u.username === username && u.password === password)
-      if (demoUser) {
-        const { password: _password, ...safeDemoUser } = demoUser
-        user.value = safeDemoUser
-        token.value = 'demo-token'
-        localStorage.setItem('token', 'demo-token')
-        localStorage.setItem('user', JSON.stringify(safeDemoUser))
-        currentBranch.value = { id: safeDemoUser.branchId, name: safeDemoUser.branchName }
-        localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
-        return { success: true }
+      console.error('Login error:', error)
+      return { 
+        success: false, 
+        error: 'Backend no disponible. Configurar Supabase para autenticación.' 
       }
-      // Default admin fallback
-      if (username === 'admin' && password === 'admin123') {
-        user.value = { id: 1, username: 'admin', role: 'admin', branchId: 1, branchName: 'Centenario' }
-        token.value = 'demo-token'
-        localStorage.setItem('token', 'demo-token')
-        localStorage.setItem('user', JSON.stringify(user.value))
-        currentBranch.value = { id: 1, name: 'Centenario' }
-        localStorage.setItem('currentBranch', JSON.stringify(currentBranch.value))
-        return { success: true }
-      }
-      return { success: false, error: 'Error de conexión' }
     }
   }
 
@@ -78,29 +53,11 @@ export const useAuthStore = defineStore('auth', () => {
     fetch('/.netlify/functions/logout', { method: 'POST' }).catch(() => {})
   }
 
-  function canAccessAccountsReceivable() {
-    return user.value?.role === 'admin'
-  }
-
-  function canModifyPrices() {
-    return user.value?.role === 'admin' || user.value?.role === 'manager'
-  }
-
-  function canViewReports() {
-    return user.value?.role === 'admin'
-  }
-
-  function canManageInventory() {
-    return user.value?.role === 'admin'
-  }
-
-  function canAccessLogistics() {
-    return user.value?.role === 'admin'
-  }
-
-  function canAccessInventory() {
-    return user.value?.role === 'admin' || user.value?.role === 'manager'
-  }
+  // Permisos por rol
+  function canViewReports() { return ['admin', 'manager'].includes(user.value?.role) }
+  function canAccessInventory() { return ['admin', 'manager'].includes(user.value?.role) }
+  function canAccessAccountsReceivable() { return ['admin', 'manager'].includes(user.value?.role) }
+  function canAccessLogistics() { return ['admin', 'manager'].includes(user.value?.role) }
 
   return {
     user,
@@ -112,11 +69,9 @@ export const useAuthStore = defineStore('auth', () => {
     isSeller,
     login,
     logout,
-    canAccessAccountsReceivable,
-    canModifyPrices,
     canViewReports,
-    canManageInventory,
-    canAccessLogistics,
     canAccessInventory,
+    canAccessAccountsReceivable,
+    canAccessLogistics,
   }
 })
