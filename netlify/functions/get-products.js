@@ -1,14 +1,38 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+
 export const handler = async (event) => {
-  const { branchId } = event.queryStringParameters || {}
+  if (event.httpMethod !== 'GET') {
+    return { statusCode: 405, body: 'Method Not Allowed' }
+  }
 
-  console.log('Getting products:', { branchId })
+  try {
+    const { branchId } = event.queryStringParameters || {}
 
-  // En producción con Supabase:
-  // SELECT * FROM products WHERE branch_id = branchId AND active = true ORDER BY name ASC
+    let query = supabase
+      .from('products')
+      .select('*')
+      .eq('active', true)
+      .order('name', { ascending: true })
 
-  // Sin datos demo — devolver array vacío si no hay backend conectado
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ success: true, products: [] }),
+    if (branchId) {
+      query = query.eq('branch_id', branchId)
+    }
+
+    const { data: products, error } = await query
+
+    if (error) throw error
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(products)
+    }
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, error: err.message })
+    }
   }
 }

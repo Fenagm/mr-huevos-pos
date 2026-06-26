@@ -1,27 +1,27 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+
 export const handler = async (event) => {
-  const { deliveryId, vehicleId } = JSON.parse(event.body || '{}')
+  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
 
-  if (!deliveryId || !vehicleId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'deliveryId y vehicleId son requeridos' }),
-    }
-  }
+  try {
+    const { deliveryId, vehicleId, routeOrder } = JSON.parse(event.body || '{}')
 
-  console.log('Assigning delivery:', { deliveryId, vehicleId })
+    const { data: delivery, error } = await supabase
+      .from('deliveries')
+      .update({
+        vehicle_id: vehicleId,
+        route_order: routeOrder || null,
+        status: 'assigned'
+      })
+      .eq('id', deliveryId)
+      .select().single()
 
-  // En producción con Supabase:
-  // UPDATE deliveries SET vehicle_id = vehicleId, status = 'assigned' WHERE id = deliveryId
-  // RETURNING *
+    if (error) throw error
 
-  // Sin backend conectado — devolver solo confirmación
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      success: true,
-      id: deliveryId,
-      vehicle_id: vehicleId,
-      status: 'assigned',
-    }),
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ success: true, delivery }) }
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) }
   }
 }

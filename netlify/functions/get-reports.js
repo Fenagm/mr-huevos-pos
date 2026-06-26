@@ -1,22 +1,50 @@
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+
 export const handler = async (event) => {
-  const { branchId, startDate, endDate } = event.queryStringParameters || {}
+  if (event.httpMethod !== 'GET') return { statusCode: 405, body: 'Method Not Allowed' }
 
-  console.log('Getting reports:', { branchId, startDate, endDate })
+  try {
+    const { branchId } = event.queryStringParameters || {}
 
-  // En producción con Supabase:
-  // SELECT * FROM sales WHERE branch_id = branchId AND created_at BETWEEN startDate AND endDate
+    // 1. Obtener ventas del mes/sucursal
+    let salesQuery = supabase.from('sales').select('total_amount, payment_method, created_at')
+    if (branchId) salesQuery = salesQuery.eq('branch_id', branchId)
+    const { data: sales, error: salesError } = await salesQuery
+    if (salesError) throw salesError
 
-  // Sin datos demo — devolver array vacío si no hay backend conectado
-  return {
-    statusCode: 200,
-    body: JSON.stringify({
-      success: true,
-      sales: [],
-      summary: {
-        totalSales: '0.00',
-        transactions: 0,
-        topProduct: '-',
-      },
-    }),
+    // 2. Obtener gastos del mes/sucursal
+    let expensesQuery = supabase.from('expenses').select('amount')
+    if (branchId) expensesQuery = expensesQuery.eq('branch_id', branchId)
+    const { data: expenses, error: expensesError } = await expensesQuery
+    if (expensesError) throw expensesError
+
+    // Calc de totales básicos
+    const totalSales = sales.reduce((acc, curr) => acc + Number(curr.total_amount), 0)
+    const totalExpenses = expenses.reduce((acc, curr) => acc + Number(curr.amount), 0)
+    const netProfit = totalSales - totalExpenses
+
+    // Métodos de pago desglosados
+    const paymentMethods = sales.reduce((acc, curr) => {
+      acc[curr.payment_method] = (acc[curr.payment_method] || 0) + Number(curr.total_amount)
+      return acc
+    }, {})
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        summary: {
+          totalSales,
+          totalExpenses,
+          netProfit,
+          salesCount: sales.length
+        },
+        paymentMethods
+      })
+    }
+  } catch (err) {
+    return { statusCode: 500, body: JSON.stringify({ success: false, error: err.message }) }
   }
 }
