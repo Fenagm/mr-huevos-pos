@@ -8,6 +8,12 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY
+// Nombre estándar de Supabase: VITE_SUPABASE_ANON_KEY
+// (antes: VITE_SUPABASE_PUBLISHABLE_KEY — nombre incorrecto que causaba cliente sin inicializar)
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('[supabase] Variables de entorno VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY no definidas. El cliente de Supabase no funcionará.')
+}
 
 export const supabase = createClient(supabaseUrl, supabaseKey)

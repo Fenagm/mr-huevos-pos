@@ -149,8 +149,14 @@ export const useCashRegisterStore = defineStore('cashRegister', () => {
   }
 
   async function recordSale(amount, paymentMethod) {
-    if (!isOpen.value) {
+    // Las ventas a cuenta corriente no requieren caja abierta (el dinero entra después)
+    if (!isOpen.value && paymentMethod !== 'account') {
       return { success: false, error: 'No hay una caja abierta' }
+    }
+
+    // Si la caja está cerrada y es pago a cuenta, solo registrar localmente en movements
+    if (!isOpen.value && paymentMethod === 'account') {
+      return { success: true }
     }
 
     try {

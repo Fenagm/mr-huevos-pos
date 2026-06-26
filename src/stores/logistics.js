@@ -151,7 +151,7 @@ export const useLogisticsStore = defineStore('logistics', () => {
         const updatedDelivery = await response.json()
         const index = deliveries.value.findIndex(d => d.id === deliveryId)
         if (index !== -1) {
-          deliveries.value[index] = updatedDelivery
+          deliveries.value[index] = { ...deliveries.value[index], ...updatedDelivery }
         }
         return { success: true }
       } else {
@@ -184,7 +184,7 @@ export const useLogisticsStore = defineStore('logistics', () => {
         const updatedDelivery = await response.json()
         const index = deliveries.value.findIndex(d => d.id === deliveryId)
         if (index !== -1) {
-          deliveries.value[index] = updatedDelivery
+          deliveries.value[index] = { ...deliveries.value[index], ...updatedDelivery }
         }
         return { success: true }
       } else {
@@ -248,7 +248,7 @@ export const useLogisticsStore = defineStore('logistics', () => {
         const updatedDelivery = await response.json()
         const index = deliveries.value.findIndex(d => d.id === deliveryId)
         if (index !== -1) {
-          deliveries.value[index] = updatedDelivery
+          deliveries.value[index] = { ...deliveries.value[index], ...updatedDelivery }
         }
         return { success: true }
       } else {
@@ -278,7 +278,7 @@ export const useLogisticsStore = defineStore('logistics', () => {
         const updatedDelivery = await response.json()
         const index = deliveries.value.findIndex(d => d.id === deliveryId)
         if (index !== -1) {
-          deliveries.value[index] = updatedDelivery
+          deliveries.value[index] = { ...deliveries.value[index], ...updatedDelivery }
         }
         return { success: true }
       } else {

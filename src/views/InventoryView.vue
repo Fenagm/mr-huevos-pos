@@ -299,8 +299,13 @@ async function saveProduct() {
 }
 
 async function toggleProductActive(product) {
+  const previous = product.active
   product.active = !product.active
-  await inventoryStore.saveProduct(product)
+  const result = await inventoryStore.saveProduct(product)
+  if (!result.success) {
+    product.active = previous
+    alert('Error al cambiar el estado del producto')
+  }
 }
 
 async function registerSpoilage() {
