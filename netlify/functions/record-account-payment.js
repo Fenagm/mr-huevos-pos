@@ -1,23 +1,58 @@
-export const handler = async (event) => {
-  // El store manda { movement, newBalance, amount, paymentMethod }
-  // movement contiene: { id, customerId, type: 'payment', amount, balanceAfter, date, description, userId, paymentMethod }
-  const { movement, newBalance, amount, paymentMethod } = JSON.parse(event.body || '{}')
+import { createClient } from '@supabase/supabase-js'
 
-  if (!movement || !movement.customerId) {
-    return {
-      statusCode: 400,
-      body: JSON.stringify({ error: 'Datos de pago inválidos' }),
-    }
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+
+export const handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' }
   }
 
-  console.log('Account payment recorded:', { movement, newBalance })
+  try {
+    const { movement, newBalance, amount, paymentMethod } = JSON.parse(event.body || '{}')
 
-  // En producción con Supabase:
-  // 1. INSERT en account_movements con todos los campos de movement
-  // 2. UPDATE customers SET account_balance = newBalance WHERE id = movement.customerId
+    if (!movement || !movement.customerId || !movement.userId) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ success: false, error: 'Datos de pago inválidos o incompletos' })
+      }
+    }
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ success: true, movement }),
+    // 1. Insertar el movimiento en la cuenta corriente
+    const { data: newMovement, error: movementError } = await supabase
+      .from('account_movements')
+      .insert([
+        {
+          customer_id: movement.customerId,
+          user_id: movement.userId,
+          type: 'payment',
+          amount: amount,
+          balance_after: newBalance,
+          description: movement.description || 'Entrega de efectivo / Pago a cuenta',
+          payment_method: paymentMethod
+        }
+      ])
+      .select()
+      .single()
+
+    if (movementError) throw movementError
+
+    // 2. Actualizar el saldo actual del cliente
+    const { error: customerError } = await supabase
+      .from('customers')
+      .update({ account_balance: newBalance })
+      .eq('id', movement.customerId)
+
+    if (customerError) throw customerError
+
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ success: true, movement: newMovement })
+    }
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ success: false, error: err.message })
+    }
   }
 }
