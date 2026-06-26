@@ -1,18 +1,14 @@
 export const handler = async (event) => {
   const { branchId } = event.queryStringParameters || {}
-  
-  // Demo products - use 'id' instead of 'productId' to match store expectations
-  const products = [
-    { id: 1, name: 'Yerba Mate 1kg', price: 8500, stock: 50, branchId: branchId || 1 },
-    { id: 2, name: 'Azúcar 1kg', price: 6200, stock: 30, branchId: branchId || 1 },
-    { id: 3, name: 'Arroz 1kg', price: 7800, stock: 40, branchId: branchId || 1 },
-    { id: 4, name: 'Fideos 500g', price: 4500, stock: 60, branchId: branchId || 1 },
-  ]
-  
+
   console.log('Getting products:', { branchId })
-  
+
+  // En producción con Supabase:
+  // SELECT * FROM products WHERE branch_id = branchId AND active = true ORDER BY name ASC
+
+  // Sin datos demo — devolver array vacío si no hay backend conectado
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, products }),
+    body: JSON.stringify({ success: true, products: [] }),
   }
 }

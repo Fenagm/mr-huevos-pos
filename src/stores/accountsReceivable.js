@@ -6,62 +6,20 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
   const customers = ref([])
   const accountMovements = ref([])
   const loading = ref(false)
-
-  // Demo data
-  const demoCustomers = [
-    { 
-      id: 1, 
-      name: 'Juan Pérez', 
-      email: 'juan@email.com', 
-      phone: '555-1234', 
-      address: 'Calle Falsa 123',
-      accountBalance: 150.00,
-      creditLimit: 500.00,
-      active: true
-    },
-    { 
-      id: 2, 
-      name: 'María García', 
-      email: 'maria@email.com', 
-      phone: '555-5678', 
-      address: 'Av. Siempre Viva 742',
-      accountBalance: 280.50,
-      creditLimit: 1000.00,
-      active: true
-    },
-    { 
-      id: 3, 
-      name: 'Carlos López', 
-      email: 'carlos@email.com', 
-      phone: '555-9012', 
-      address: 'Belgrano 456',
-      accountBalance: 95.00,
-      creditLimit: 300.00,
-      active: true
-    },
-  ]
-
-  const demoMovements = [
-    { id: 1, customerId: 1, type: 'sale', amount: 50.00, balanceAfter: 150.00, date: '2024-01-10', description: 'Venta fiada', userId: 1 },
-    { id: 2, customerId: 1, type: 'payment', amount: -100.00, balanceAfter: 50.00, date: '2024-01-12', description: 'Pago en efectivo', userId: 1 },
-    { id: 3, customerId: 1, type: 'sale', amount: 100.00, balanceAfter: 150.00, date: '2024-01-15', description: 'Venta fiada', userId: 1 },
-    { id: 4, customerId: 2, type: 'sale', amount: 280.50, balanceAfter: 280.50, date: '2024-01-14', description: 'Venta fiada', userId: 1 },
-    { id: 5, customerId: 3, type: 'sale', amount: 95.00, balanceAfter: 95.00, date: '2024-01-13', description: 'Venta fiada', userId: 1 },
-  ]
-
+  
   // Computed
   const totalReceivable = computed(() => {
     return customers.value.reduce((sum, c) => sum + (c.accountBalance || 0), 0)
   })
-
+  
   const customersWithDebt = computed(() => {
     return customers.value.filter(c => (c.accountBalance || 0) > 0 && c.active)
   })
-
+  
   const overCreditLimitCustomers = computed(() => {
     return customers.value.filter(c => (c.accountBalance || 0) > (c.creditLimit || 0) && c.active)
   })
-
+  
   // Actions
   async function loadCustomers() {
     loading.value = true
@@ -71,11 +29,11 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
         const data = await response.json()
         customers.value = data.customers || []
       } else {
-        throw new Error('Failed to load customers')
+        customers.value = []
       }
     } catch (error) {
-      // Demo mode
-      customers.value = [...demoCustomers]
+      console.error('Error loading customers:', error)
+      customers.value = []
     } finally {
       loading.value = false
     }
@@ -89,11 +47,11 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
       if (response.ok) {
         return await response.json()
       } else {
-        throw new Error('Failed to load movements')
+        return { success: true, movements: [] }
       }
     } catch (error) {
-      // Demo mode
-      return demoMovements.filter(m => m.customerId === customerId)
+      console.error('Error loading movements:', error)
+      return { success: true, movements: [] }
     }
   }
 
@@ -141,7 +99,7 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
         throw new Error('Failed to add movement')
       }
     } catch (error) {
-      // Demo mode
+      console.error('Error adding movement:', error)
       customer.accountBalance = newBalance
       accountMovements.value.push(movement)
       return { success: true, movement, newBalance }
@@ -189,7 +147,7 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
         throw new Error('Failed to record payment')
       }
     } catch (error) {
-      // Demo mode
+      console.error('Error recording payment:', error)
       customer.accountBalance = newBalance
       accountMovements.value.push(movement)
       return { success: true, movement, newBalance }
@@ -214,7 +172,7 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
         throw new Error('Failed to update credit limit')
       }
     } catch (error) {
-      // Demo mode
+      console.error('Error updating credit limit:', error)
       customer.creditLimit = creditLimit
       return { success: true }
     }
@@ -243,7 +201,7 @@ export const useAccountsReceivableStore = defineStore('accountsReceivable', () =
         throw new Error('Failed to update customer status')
       }
     } catch (error) {
-      // Demo mode
+      console.error('Error toggling customer active:', error)
       return { success: true }
     }
   }

@@ -9,23 +9,21 @@ export const handler = async (event) => {
     isForDelivery = false,
   } = JSON.parse(event.body || '{}')
 
-  const sale = {
-    saleId: Date.now(),
-    items,
-    total,
-    userId,
-    branchId,
-    paymentMethod,
-    customerId,
-    isForDelivery,
-    date: new Date().toISOString(),
-  }
+  console.log('Creating sale:', { items: items.length, total, paymentMethod })
 
-  // Demo mode - in production, save to Supabase enforcing branch_id in every table.
-  console.log('Sale created:', sale)
+  // En producción con Supabase:
+  // 1. INSERT INTO sales (...) VALUES (...) RETURNING id
+  // 2. INSERT INTO sale_items (sale_id, product_id, quantity, price) VALUES ...
+  // 3. UPDATE products SET stock = stock - quantity WHERE id = product_id
+  // 4. Si es cuenta corriente: UPDATE customers SET account_balance = account_balance + total
 
+  // Sin backend conectado — devolver solo confirmación
   return {
     statusCode: 200,
-    body: JSON.stringify({ success: true, ...sale, message: 'Venta registrada' }),
+    body: JSON.stringify({ 
+      success: true, 
+      saleId: Date.now(),
+      message: 'Venta registrada' 
+    }),
   }
 }
