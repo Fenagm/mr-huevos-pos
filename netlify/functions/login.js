@@ -26,49 +26,50 @@ export const handler = async (event) => {
   }
 
   try {
-    // Buscar usuario en la tabla 'users' por username
-    // La tabla debe tener: id, username, password_hash, role, branch_id, name
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, username, role, branch_id, name, password_hash')
-      .eq('username', username)
-      .single()
+  // Buscar usuario haciendo un JOIN con la tabla 'branches' para traer el nombre
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('id, username, role, name, password_hash, branch_id, branches(name)')
+    .eq('username', username)
+    .single()
 
-    if (error || !user) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
-      }
-    }
-
-    // Verificar contraseña
-    // En producción: usar bcrypt.compare(password, user.password_hash)
-    // Para desarrollo sin bcrypt: comparar directamente (SOLO PARA TESTING)
-    // IMPORTANTE: La columna password_hash en Supabase debe contener el hash generado con bcrypt
-    
-    const passwordsMatch = await verifyPassword(password, user.password_hash)
-    
-    if (!passwordsMatch) {
-      return {
-        statusCode: 401,
-        body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
-      }
-    }
-    
+  if (error || !user) {
     return {
-      statusCode: 200,
-      body: JSON.stringify({ 
-        success: true, 
-        user: {
-          id: user.id,
-          username: user.username,
-          role: user.role,
-          branchId: user.branch_id,
-          name: user.name
-        }
-      }),
+      statusCode: 401,
+      body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
     }
-  } catch (err) {
+  }
+
+  // Verificar contraseña
+  const passwordsMatch = await verifyPassword(password, user.password_hash)
+  
+  if (!passwordsMatch) {
+    return {
+      statusCode: 401,
+      body: JSON.stringify({ success: false, error: 'Credenciales inválidas' }),
+    }
+  }
+  
+  // Como estás usando una tabla customizada y no Supabase Auth nativo,
+  // generamos un token para que el frontend valide la sesión (en prod puedes usar JWT)
+  const fakeToken = `session_${user.id}_${Date.now()}`
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ 
+      success: true, 
+      token: fakeToken, // <-- Agregado para cumplir con auth.js
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        branchId: user.branch_id,
+        branchName: user.branches ? user.branches.name : null, // <-- Agregado para cumplir con auth.js
+        name: user.name
+      }
+    }),
+  }
+} catch (err) {
     console.error('[login] Error:', err)
     return {
       statusCode: 500,
