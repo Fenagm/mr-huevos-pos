@@ -248,7 +248,8 @@ function editCreditLimit(customer) { selectedCustomer.value = customer; creditLi
 
 async function viewMovements(customer) {
   selectedCustomer.value = customer
-  movements.value = await accountsStore.getCustomerMovements(customer.id, '2000-01-01', '2099-12-31')
+  const result = await accountsStore.getCustomerMovements(customer.id, '2000-01-01', '2099-12-31')
+  movements.value = result.movements || []
   showMovementsModal.value = true
 }
 

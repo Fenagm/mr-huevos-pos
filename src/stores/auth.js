@@ -58,6 +58,7 @@ export const useAuthStore = defineStore('auth', () => {
   function canAccessInventory() { return ['admin', 'manager'].includes(user.value?.role) }
   function canAccessAccountsReceivable() { return ['admin', 'manager'].includes(user.value?.role) }
   function canAccessLogistics() { return ['admin', 'manager'].includes(user.value?.role) }
+  function canAccessPurchases() { return ['admin', 'manager'].includes(user.value?.role) }
 
   return {
     user,
@@ -73,5 +74,6 @@ export const useAuthStore = defineStore('auth', () => {
     canAccessInventory,
     canAccessAccountsReceivable,
     canAccessLogistics,
+    canAccessPurchases,
   }
 })

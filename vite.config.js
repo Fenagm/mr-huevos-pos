@@ -11,6 +11,11 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    strictPort: true,
+    cors: true,
+    // Permite que netlify dev (en :8888) haga proxy a Vite (:3000)
+    // Vite 5 bloquea requests cuyo Host no coincide — esto lo deshabilita en dev
+    allowedHosts: 'all',
   },
   build: {
     outDir: 'dist',

@@ -28,7 +28,7 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(movements)
+      body: JSON.stringify({ success: true, movements: movements || [] })
     }
   } catch (err) {
     return {

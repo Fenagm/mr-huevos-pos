@@ -27,7 +27,7 @@ export const handler = async (event) => {
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(customers)
+      body: JSON.stringify({ success: true, customers: customers || [] })
     }
   } catch (err) {
     return {

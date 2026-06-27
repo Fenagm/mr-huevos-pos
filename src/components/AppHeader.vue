@@ -45,7 +45,7 @@ const canViewReports = computed(() => authStore.canViewReports())
 const canAccessInventory = computed(() => authStore.canAccessInventory())
 const canAccessAccounts = computed(() => authStore.canAccessAccountsReceivable())
 const canAccessLogistics = computed(() => authStore.canAccessLogistics())
-const canAccessPurchases = computed(() => true)
+const canAccessPurchases = computed(() => authStore.canAccessPurchases())
 const canAccessCustomers = computed(() => true)
 
 function handleLogout() {

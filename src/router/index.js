@@ -17,7 +17,7 @@ const routes = [
     path: '/reports',
     name: 'Reports',
     component: () => import('@/views/ReportsView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    meta: { requiresAuth: true, roles: ['admin'] },
   },
   {
     path: '/customers',
@@ -41,13 +41,13 @@ const routes = [
     path: '/accounts-receivable',
     name: 'AccountsReceivable',
     component: () => import('@/views/AccountsReceivableView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    meta: { requiresAuth: true, roles: ['admin', 'manager'] },
   },
   {
     path: '/logistics',
     name: 'Logistics',
     component: () => import('@/views/LogisticsView.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true },
+    meta: { requiresAuth: true, roles: ['admin', 'manager'] },
   },
 ]
 
@@ -61,9 +61,6 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/')
-  } else if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
-    alert('Acceso denegado. Solo administradores pueden acceder a esta sección.')
-    next('/pos')
   } else if (to.meta.roles && !to.meta.roles.includes(authStore.user?.role)) {
     alert('Acceso denegado para su perfil.')
     next('/pos')
