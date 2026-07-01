@@ -1,46 +1,40 @@
-```
+```gitignore
 # Dependencies
-node_modules/
+vendor/
 
-# Environment variables
+# Environment
 .env
 .env.local
-*.env.*
-
-# Build artifacts
-dist/
-build/
-target/
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
+.env.*
 
 # Logs
 *.log
 
-# Coverage reports
-coverage/
-htmlcov/
-.coverage
-
 # Temporary files
 *.tmp
 *.swp
-*.swo
+*~
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# IDE specific
-.vscode/
-.idea/
+# PHP specific
+*.php~
+*.php.bak
+.php_cs.cache
 
-# Package manager caches
-.npm/
-.yarn/
-.pnpm-store/
+# Database
+*.sql
+*.db
+*.sqlite
+
+# Cache
+.cache/
+*.cache
+
+# Backup files
+*.bak
+*.backup
+*~
 ```
